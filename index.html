@@ -3,582 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ay-Technologies</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <title>Employee Management System (Fixed)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #4cc9f0;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --admin: #7209b7;
-            --manager: #f72585;
-            --employee: #4cc9f0;
+            --primary: #4361ee; --secondary: #3f37c9; --success: #4cc9f0; --light: #f8f9fa; --dark: #212529;
+            --admin: #7209b7; --manager: #f72585; --employee: #4cc9f0; --task-assigned: #3b82f6; 
+            --task-completed: #10b981; --task-missed: #ef4444; --appreciation: #f59e0b;
         }
-
-
-body {
-background-color: #f5f7fb;
-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-overflow-x: hidden;
-}
-
-.auth-container {
-    background: linear-gradient(135deg, #4361ee, #3a0ca3);
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.auth-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    width: 100%;
-    max-width: 400px;
-    overflow: hidden;
-}
-
-.dashboard-container {
-    display: flex;
-    min-height: 100vh;
-}
-
-.sidebar {
-    background: linear-gradient(to bottom, var(--primary), var(--secondary));
-    width: 250px;
-    min-height: 100vh;
-    color: white;
-    box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s;
-    z-index: 100;
-}
-
-.sidebar-header {
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.15);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.user-info {
-    padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.user-role {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    margin-top: 5px;
-}
-
-.role-admin { background: var(--admin); }
-.role-manager { background: var(--manager); }
-.role-employee { background: var(--employee); }
-
-.sidebar-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar-menu li a {
-    color: rgba(255, 255, 255, 0.8);
-    padding: 12px 20px;
-    display: block;
-    text-decoration: none;
-    transition: all 0.2s;
-    border-left: 3px solid transparent;
-}
-
-.sidebar-menu li a:hover, .sidebar-menu li a.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-left: 3px solid white;
-}
-
-.sidebar-menu li a i {
-    width: 25px;
-    text-align: center;
-    margin-right: 10px;
-}
-
-.main-content {
-    flex: 1;
-    padding: 20px;
-    background-color: #f0f4f8;
-}
-
-.top-bar {
-    background: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.dashboard-title {
-    font-weight: 600;
-    color: var(--dark);
-    margin: 0;
-}
-
-.card {
-    border-radius: 12px;
-    border: none;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-    transition: transform 0.3s;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.card-header {
-    background: white;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    padding: 15px 20px;
-    border-radius: 12px 12px 0 0 !important;
-    font-weight: 600;
-}
-
-.status-card {
-    text-align: center;
-    padding: 20px;
-}
-
-.status-icon {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-}
-
-.present { color: #2ecc71; }
-.absent { color: #e74c3c; }
-.leave { color: #f39c12; }
-.wfh { color: #3498db; }
-
-.employee-card {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.employee-card:last-child {
-    border-bottom: none;
-}
-
-.employee-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.2rem;
-    margin-right: 15px;
-}
-
-.employee-info {
-    flex: 1;
-}
-
-.status-badge {
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.action-btn {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-approve { background: #2ecc71; color: white; }
-.btn-reject { background: #e74c3c; color: white; }
-
-.form-container {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-.mobile-menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 1.5rem;
-}
-
-@media (max-width: 992px) {
-    .sidebar {
-        position: fixed;
-        left: -250px;
-    }
-    
-    .sidebar.active {
-        left: 0;
-    }
-    
-    .mobile-menu-btn {
-        display: block;
-    }
-}
-
-.stat-card {
-    text-align: center;
-    padding: 20px;
-    border-radius: 12px;
-    color: white;
-    margin-bottom: 20px;
-}
-
-.stat-1 { background: linear-gradient(135deg, #4361ee, #3a0ca3); }
-.stat-2 { background: linear-gradient(135deg, #f72585, #b5179e); }
-.stat-3 { background: linear-gradient(135deg, #4cc9f0, #4895ef); }
-.stat-4 { background: linear-gradient(135deg, #7209b7, #560bad); }
-
-/* Loading spinner */
-.spinner-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Error message */
-.error-message {
-    color: #e74c3c;
-    font-size: 0.9rem;
-    margin-top: 5px;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-
-/* Animation for alerts */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.alert {
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* Hover effects */
-.hover-scale {
-    transition: transform 0.2s;
-}
-
-.hover-scale:hover {
-    transform: scale(1.02);
-}
-
-/* Custom checkbox */
-.form-check-input:checked {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
-/* Custom select */
-.form-select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
-}
-
-/* Custom buttons */
-.btn-primary {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
-.btn-primary:hover {
-    background-color: var(--secondary);
-    border-color: var(--secondary);
-}
-
-/* Badge colors */
-.badge-primary {
-    background-color: var(--primary);
-}
-.badge-success { background-color: #2ecc71; }
-.badge-warning { background-color: #f39c12; }
-.badge-danger { background-color: #e74c3c; }
-.badge-info { background-color: #3498db; }
-
-
-/* Table styles */
-.table-hover tbody tr:hover {
-    background-color: rgba(67, 97, 238, 0.05);
-}
-
-/* Responsive tables */
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-</style>
-
+        body { background-color: #f5f7fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+        .auth-container { background: linear-gradient(135deg, #4361ee, #3a0ca3); height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: rgba(255, 255, 255, 0.95); border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); width: 100%; max-width: 400px; overflow: hidden; }
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar { background: linear-gradient(to bottom, var(--primary), var(--secondary)); width: 250px; min-height: 100vh; color: white; box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1); transition: all 0.3s; z-index: 100; }
+        .sidebar-header { padding: 20px; background: rgba(0, 0, 0, 0.15); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .user-info { padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .user-role { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; margin-top: 5px; }
+        .role-admin { background: var(--admin); } .role-manager { background: var(--manager); } .role-employee { background: var(--employee); }
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; }
+        .sidebar-menu li a { color: rgba(255, 255, 255, 0.8); padding: 12px 20px; display: block; text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: rgba(255, 255, 255, 0.1); color: white; border-left: 3px solid white; }
+        .sidebar-menu li a i { width: 25px; text-align: center; margin-right: 10px; }
+        .main-content { flex: 1; padding: 20px; background-color: #f0f4f8; position: relative; }
+        .top-bar { background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .dashboard-title { font-weight: 600; color: var(--dark); margin: 0; }
+        .card { border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); margin-bottom: 20px; }
+        .card-header { background: white; border-bottom: 1px solid rgba(0, 0, 0, 0.05); padding: 15px 20px; border-radius: 12px 12px 0 0 !important; font-weight: 600; }
+        .employee-card { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #e9ecef; }
+        .employee-card:last-child { border-bottom: none; }
+        .employee-avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; margin-right: 15px; flex-shrink: 0; }
+        .employee-info { flex: 1; }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+        .mobile-menu-btn { display: none; background: none; border: none; color: var(--primary); font-size: 1.5rem; }
+        @media (max-width: 992px) { .sidebar { position: fixed; left: -250px; } .sidebar.active { left: 0; } .mobile-menu-btn { display: block; } }
+        .stat-card { text-align: center; padding: 20px; border-radius: 12px; color: white; margin-bottom: 20px; }
+        .stat-1 { background: linear-gradient(135deg, #4361ee, #3a0ca3); } .stat-2 { background: linear-gradient(135deg, #f72585, #b5179e); }
+        .stat-3 { background: linear-gradient(135deg, #4cc9f0, #4895ef); } .stat-4 { background: linear-gradient(135deg, #7209b7, #560bad); }
+        .spinner-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #ffffff; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .alert-container { position: fixed; top: 20px; right: 20px; z-index: 1056; width: 350px; }
+        .table-hover tbody tr:hover { background-color: rgba(67, 97, 238, 0.05); }
+        .table-responsive { overflow-x: auto; }
+        .badge-success { background-color: #2ecc71 !important; } .badge-warning { background-color: #f39c12 !important; } .badge-danger { background-color: #e74c3c !important; } .badge-info { background-color: #3498db !important; } .badge-primary { background-color: var(--primary) !important; }
+        
+        /* Tasks & Appreciation Styles */
+        .task-card { border-left: 4px solid var(--task-assigned); margin-bottom: 15px; border-radius: 8px; }
+        .task-card.completed { border-left-color: var(--task-completed); }
+        .task-card.missed { border-left-color: var(--task-missed); }
+        .task-status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+        .task-assigned { background-color: rgba(59, 130, 246, 0.15); color: var(--task-assigned); }
+        .task-completed { background-color: rgba(16, 185, 129, 0.15); color: var(--task-completed); }
+        .task-missed { background-color: rgba(239, 68, 68, 0.15); color: var(--task-missed); }
+        .appreciation-card { background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05)); border-left: 4px solid var(--appreciation); }
+        .appreciation-badge { background: var(--appreciation); color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .clock-btn { transition: all 0.3s; }
+        .clock-btn.clocked-in { background: var(--task-completed); }
+        .clock-btn.clocked-out { background: var(--task-missed); }
+        .task-actions .btn { margin-right: 5px; }
+        .task-form .form-label { font-weight: 500; }
+        .analytics-chart { height: 300px; position: relative; }
+        .profile-pic { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+        .password-strength { height: 5px; margin-top: 5px; border-radius: 3px; }
+        .strength-0 { background: #e74c3c; width: 20%; }
+        .strength-1 { background: #f39c12; width: 40%; }
+        .strength-2 { background: #f1c40f; width: 60%; }
+        .strength-3 { background: #2ecc71; width: 80%; }
+        .strength-4 { background: #27ae60; width: 100%; }
+        .login-details { background: #e8f4fd; border-radius: 8px; padding: 15px; margin-top: 20px; }
+        .login-details h5 { margin-top: 0; }
+        .login-details ul { padding-left: 20px; margin-bottom: 0; }
+        .login-details li { margin-bottom: 8px; }
+        .login-details .role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 5px; }
+    </style>
 </head>
 <body>
-    <!-- Loading Spinner -->
-    <div id="loading-spinner" class="spinner-container d-none">
-        <div class="spinner"></div>
-    </div>
+    <div id="alert-container"></div>
+    <div id="loading-spinner" class="spinner-container d-none"><div class="spinner"></div></div>
 
-<!-- Login Screen -->
-
-<div id="auth-screen" class="auth-container">
-    <div class="auth-card">
-        <div class="text-center p-4" style="background: var(--primary);">
-            <h3 class="text-white mb-0">Ay-Technologies</h3>
-        </div>
-        <div class="p-4">
-            <div class="mb-4 text-center">
-                <img src="https://cdn-icons-png.flaticon.com/512/6146/6146587.png" alt="Login" style="width: 100px;">
-                <h4 class="mt-3">Sign In to Dashboard</h4>
-                <p class="text-muted">Enter your credentials to access your account</p>
-            </div>
-
-<div id="login-error" class="alert alert-danger d-none"></div>
-        
-        <div class="mb-3">
-            <label class="form-label">Email Address</label>
-            <input type="email" id="login-email" class="form-control" placeholder="name@company.com">
-            <div id="email-error" class="error-message d-none">Please enter a valid email</div>
-        </div>
-        
-        <div class="mb-3">
-            <label class="form-label">Password</label>
-            <input type="password" id="login-password" class="form-control" placeholder="Enter your password">
-            <div id="password-error" class="error-message d-none">Please enter your password</div>
-        </div>
-        
-        <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="remember">
-            <label class="form-check-label" for="remember">Remember me</label>
-        </div>
-        
-        <button id="login-btn" class="btn btn-primary w-100 mb-3">Sign In</button>
-        
-        <div class="text-center mt-4">
-            <p class="text-muted mb-0">Need an account? <a href="#" id="register-link">Contact Admin</a></p>
-        </div>
-    </div>
-</div>
-</div>
-
-<!-- Main Dashboard -->
-
-<div id="dashboard" class="d-none">
-    <div class="dashboard-container">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h5 class="mb-0">Ay-Technologies</h5>
-            </div>
-
-<div class="user-info">
-            <div class="d-flex align-items-center">
-                <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center rounded-circle" style="width: 50px; height: 50px;">
-                    <span id="user-initials">JD</span>
-                </div>
-                <div class="ms-3">
-                    <h6 class="mb-0" id="user-name">John Doe</h6>
-                    <span class="user-role role-employee" id="user-role">Employee</span>
-                </div>
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-card">
+            <div class="text-center p-4" style="background: var(--primary);"><h3 class="text-white mb-0">Employee Management System</h3></div>
+            <div class="p-4">
+                <div class="mb-4 text-center"><img src="https://cdn-icons-png.flaticon.com/512/6146/6146587.png" alt="Login" style="width: 100px;"><h4 class="mt-3">Sign In to Dashboard</h4></div>
+                <form id="login-form" onsubmit="return false;">
+                    <div id="login-error" class="alert alert-danger d-none"></div>
+                    <div class="mb-3"><label class="form-label">Email Address</label><input type="email" id="login-email" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label">Password</label><input type="password" id="login-password" class="form-control" required></div>
+                    <button type="button" id="login-btn" class="btn btn-primary w-100">Sign In</button>
+                    <div class="text-center mt-3"><a href="#" id="setup-link">No account? Click here to setup demo data</a></div>
+                </form>
             </div>
         </div>
-        
-        <ul class="sidebar-menu" id="main-menu">
-            <li><a href="#" class="active" data-view="dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
-            <li><a href="#" data-view="attendance"><i class="fas fa-calendar-check"></i> Attendance</a></li>
-            <li><a href="#" data-view="leave"><i class="fas fa-umbrella-beach"></i> Leave Management</a></li>
-            <li><a href="#" data-view="wfh"><i class="fas fa-laptop-house"></i> Work From Home</a></li>
-            <li class="d-none admin-only"><a href="#" data-view="employees"><i class="fas fa-users-cog"></i> Employee Management</a></li>
-            <li class="d-none admin-only"><a href="#" data-view="settings"><i class="fas fa-cog"></i> System Settings</a></li>
-            <li><a href="#" data-view="profile"><i class="fas fa-user"></i> My Profile</a></li>
-            <li><a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-        </ul>
     </div>
     
-    <div class="main-content">
-        <div class="top-bar">
-            <button class="mobile-menu-btn">
-                <i class="fas fa-bars"></i>
-            </button>
-            <h4 class="dashboard-title" id="view-title">Dashboard</h4>
-            <div class="d-flex align-items-center">
-                <span id="current-date" class="me-3">June 15, 2025</span>
-                <div class="dropdown">
-                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="notifications" data-bs-toggle="dropdown">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge bg-danger" id="notification-count">0</span>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end" id="notification-dropdown">
-                        <div class="dropdown-item text-center py-3">
-                            <div class="spinner-border spinner-border-sm text-primary"></div>
-                            <span class="ms-2">Loading notifications...</span>
-                        </div>
+    <div id="dashboard" class="d-none">
+        <div class="dashboard-container">
+            <div class="sidebar">
+                <div class="sidebar-header"><h5 class="mb-0">Employee Management</h5></div>
+                <div class="user-info">
+                    <div class="d-flex align-items-center">
+                        <div class="employee-avatar"><span id="user-initials"></span></div>
+                        <div class="ms-3"><h6 class="mb-0" id="user-name"></h6><span class="user-role" id="user-role"></span></div>
                     </div>
                 </div>
+                <ul class="sidebar-menu" id="main-menu">
+                    <li><a href="#" class="active" data-view="dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="#" data-view="attendance"><i class="fas fa-calendar-check"></i> Attendance</a></li>
+                    <li><a href="#" data-view="leave"><i class="fas fa-house-user"></i> Leave & WFH</a></li>
+                    <li><a href="#" data-view="tasks"><i class="fas fa-tasks"></i> Tasks</a></li>
+                    <li><a href="#" data-view="appreciations"><i class="fas fa-medal"></i> Appreciations</a></li>
+                    <li><a href="#" data-view="analytics"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                    <li class="admin-only"><a href="#" data-view="employees"><i class="fas fa-users-cog"></i> Employees</a></li>
+                    <li><a href="#" data-view="profile"><i class="fas fa-user"></i> Profile</a></li>
+                    <li><a href="#" data-view="password"><i class="fas fa-lock"></i> Change Password</a></li>
+                    <li><a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
             </div>
-        </div>
-        
-        <!-- Dashboard View -->
-        <div class="view-content" id="dashboard-view">
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="stat-card stat-1 hover-scale">
-                        <i class="fas fa-users fa-2x mb-2"></i>
-                        <h3 class="mb-0" id="total-employees">0</h3>
-                        <p class="mb-0">Total Employees</p>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card stat-2 hover-scale">
-                        <i class="fas fa-calendar-day fa-2x mb-2"></i>
-                        <h3 class="mb-0" id="present-today">0</h3>
-                        <p class="mb-0">Present Today</p>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card stat-3 hover-scale">
-                        <i class="fas fa-plane-departure fa-2x mb-2"></i>
-                        <h3 class="mb-0" id="on-leave">0</h3>
-                        <p class="mb-0">On Leave</p>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card stat-4 hover-scale">
-                        <i class="fas fa-laptop-house fa-2x mb-2"></i>
-                        <h3 class="mb-0" id="wfh-today">0</h3>
-                        <p class="mb-0">Working Remotely</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <span>Employee Status Today</span>
-                            <div>
-                                <select class="form-select form-select-sm" id="department-filter">
-                                    <option value="all">All Departments</option>
-                                    <option value="hr">HR</option>
-                                    <option value="developer">Developer</option>
-                                    <option value="web-developer">Web Developer</option>
-                                    <option value="graphic-designer">Graphic Designer</option>
-                                    <option value="digital-marketer">Digital Marketer</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="card-body p-0" id="employee-status-container">
-                            <div class="text-center py-5">
-                                <div class="spinner-border text-primary"></div>
-                                <p class="mt-2">Loading employee data...</p>
-                            </div>
-                        </div>
+            <div class="main-content">
+                <div class="top-bar">
+                    <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
+                    <h4 class="dashboard-title" id="view-title">Dashboard</h4>
+                    <div class="d-flex align-items-center">
+                        <button id="clock-btn" class="btn btn-sm clock-btn me-2">Clock In</button>
+                        <span id="current-date"></span>
                     </div>
                 </div>
                 
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            Pending Approvals
+                <!-- Dashboard View -->
+                <div class="view-content" id="dashboard-view">
+                    <div class="row mb-4">
+                        <div class="col-md-3"><div class="stat-card stat-1"><i class="fas fa-users fa-2x mb-2"></i><h3 class="mb-0" id="total-employees">0</h3><p class="mb-0">Total Employees</p></div></div>
+                        <div class="col-md-3"><div class="stat-card stat-2"><i class="fas fa-calendar-day fa-2x mb-2"></i><h3 class="mb-0" id="present-today">0</h3><p class="mb-0">Present Today</p></div></div>
+                        <div class="col-md-3"><div class="stat-card stat-3"><i class="fas fa-plane-departure fa-2x mb-2"></i><h3 class="mb-0" id="on-leave">0</h3><p class="mb-0">On Leave</p></div></div>
+                        <div class="col-md-3"><div class="stat-card stat-4"><i class="fas fa-laptop-house fa-2x mb-2"></i><h3 class="mb-0" id="wfh-today">0</h3><p class="mb-0">Working Remotely</p></div></div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Today's Employee Status</div>
+                                <div class="card-body p-0" id="employee-status-container" style="max-height: 350px; overflow-y: auto;"></div>
+                            </div>
                         </div>
-                        <div class="card-body p-0" id="pending-approvals-container">
-                            <div class="text-center py-5">
-                                <div class="spinner-border spinner-border-sm text-primary"></div>
-                                <p class="mt-2">Loading pending requests...</p>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Your Tasks</span>
+                                    <button class="btn btn-sm btn-outline-primary" id="add-task-btn">Add Task</button>
+                                </div>
+                                <div class="card-body p-0" id="user-tasks-container" style="max-height: 350px; overflow-y: auto;"></div>
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Recent Appreciations</span>
+                            <button class="btn btn-sm btn-outline-primary" id="add-appreciation-btn">Give Appreciation</button>
+                        </div>
+                        <div class="card-body" id="recent-appreciations"></div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Attendance View -->
-        <div class="view-content d-none" id="attendance-view">
-            <div class="row">
-                <div class="col-md-8">
+                
+                <!-- Attendance View -->
+                <div class="view-content d-none" id="attendance-view">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span>My Attendance</span>
+                            <span>Attendance Records</span>
                             <div>
-                                <select class="form-select form-select-sm" id="attendance-month">
+                                <select class="form-select form-select-sm d-inline-block w-auto" id="attendance-month">
                                     <option value="0">January</option>
                                     <option value="1">February</option>
                                     <option value="2">March</option>
                                     <option value="3">April</option>
                                     <option value="4">May</option>
-                                    <option value="5" selected>June</option>
-                                    <option value="6">July</option>
+                                    <option value="5">June</option>
+                                    <option value="6" selected>July</option>
                                     <option value="7">August</option>
                                     <option value="8">September</option>
                                     <option value="9">October</option>
                                     <option value="10">November</option>
                                     <option value="11">December</option>
+                                </select>
+                                <select class="form-select form-select-sm d-inline-block w-auto ms-2" id="attendance-year">
+                                    <option>2023</option>
+                                    <option selected>2024</option>
                                 </select>
                             </div>
                         </div>
@@ -588,1490 +201,1661 @@ overflow-x: hidden;
                                     <thead>
                                         <tr>
                                             <th>Date</th>
-                                            <th>Status</th>
                                             <th>Clock In</th>
                                             <th>Clock Out</th>
                                             <th>Total Hours</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="attendance-table">
-                                        <!-- Data will be populated by JS -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            Today's Status
-                        </div>
-                        <div class="card-body text-center py-4">
-                            <div id="clock-status" class="mb-3">
-                                <div class="spinner-border spinner-border-sm text-primary"></div>
-                                <span class="ms-2">Loading status...</span>
-                            </div>
-                            <button id="clock-btn" class="btn btn-primary btn-lg px-5" disabled>
-                                <i class="fas fa-clock me-2"></i>
-                                <span id="clock-action">Loading...</span>
-                            </button>
-                            <div class="mt-3 text-muted small">
-                                <i class="fas fa-info-circle me-1"></i>
-                                <span id="clock-message">Please wait while we load your status</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            Attendance Summary
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center">
-                                <div class="col-4">
-                                    <h5 class="mb-0" id="present-count">0</h5>
-                                    <small class="text-muted">Present</small>
-                                </div>
-                                <div class="col-4">
-                                    <h5 class="mb-0" id="absent-count">0</h5>
-                                    <small class="text-muted">Absent</small>
-                                </div>
-                                <div class="col-4">
-                                    <h5 class="mb-0" id="late-count">0</h5>
-                                    <small class="text-muted">Late</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Leave Management View -->
-        <div class="view-content d-none" id="leave-view">
-            <div class="row">
-                <div class="col-md-7">
-                    <div class="card">
-                        <div class="card-header">
-                            Apply for Leave
-                        </div>
-                        <div class="card-body">
-                            <form id="leave-form">
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Start Date</label>
-                                        <input type="date" class="form-control" id="leave-start" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">End Date</label>
-                                        <input type="date" class="form-control" id="leave-end" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Leave Type</label>
-                                    <select class="form-select" id="leave-type" required>
-                                        <option value="">Select leave type</option>
-                                        <option value="sick">Sick Leave</option>
-                                        <option value="vacation">Vacation Leave</option>
-                                        <option value="personal">Personal Leave</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Reason</label>
-                                    <textarea class="form-control" id="leave-reason" rows="3" required></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Submit Request</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-header">
-                            My Leave Requests
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Type</th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="leave-requests-table">
-                                         <!-- Data will be populated by JS -->
-                                    </tbody>
+                                    <tbody id="attendance-table"></tbody>
                                 </table>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            Leave Balance
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <h5 class="mb-0" id="sick-leave-balance">12</h5>
-                                    <small class="text-muted">Sick Leave</small>
-                                </div>
-                                <div class="col-6">
-                                    <h5 class="mb-0" id="vacation-leave-balance">18</h5>
-                                    <small class="text-muted">Vacation Leave</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Admin/Manager Leave Approval Section -->
-            <div class="row mt-4 d-none" id="leave-approval-section">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            Leave Requests to Approve
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Employee</th>
-                                            <th>Date</th>
-                                            <th>Type</th>
-                                            <th>Reason</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="leave-approval-table">
-                                        <!-- Data will be populated by JS -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Work From Home View -->
-        <div class="view-content d-none" id="wfh-view">
-            <div class="row">
-                <div class="col-md-7">
-                    <div class="card">
-                        <div class="card-header">
-                            Request Work From Home
-                        </div>
-                        <div class="card-body">
-                            <form id="wfh-form">
-                                <div class="mb-3">
-                                    <label class="form-label">Date</label>
-                                    <input type="date" class="form-control" id="wfh-date" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Reason</label>
-                                    <textarea class="form-control" id="wfh-reason" rows="3" required></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Submit Request</button>
-                            </form>
                         </div>
                     </div>
                 </div>
                 
-                <div class="col-md-5">
-                    <div class="card">
-                        <div class="card-header">
-                            My WFH Requests
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Reason</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="wfh-requests-table">
-                                        <!-- Data will be populated by JS -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            WFH Statistics
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center">
-                                <div class="col-4">
-                                    <h5 class="mb-0" id="wfh-approved">0</h5>
-                                    <small class="text-muted">Approved</small>
-                                </div>
-                                <div class="col-4">
-                                    <h5 class="mb-0" id="wfh-pending">0</h5>
-                                    <small class="text-muted">Pending</small>
-                                </div>
-                                <div class="col-4">
-                                    <h5 class="mb-0" id="wfh-rejected">0</h5>
-                                    <small class="text-muted">Rejected</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Admin/Manager WFH Approval Section -->
-            <div class="row mt-4 d-none" id="wfh-approval-section">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            WFH Requests to Approve
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Employee</th>
-                                            <th>Date</th>
-                                            <th>Reason</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="wfh-approval-table">
-                                       <!-- Data will be populated by JS -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Employee Management View (Admin Only) -->
-        <div class="view-content d-none" id="employees-view">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Employee Management</span>
-                    <button class="btn btn-primary btn-sm" id="add-employee-btn">
-                        <i class="fas fa-plus me-1"></i> Add Employee
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Department</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="employees-table">
-                                <tr>
-                                    <td colspan="6" class="text-center py-5">
-                                        <div class="spinner-border text-primary"></div>
-                                        <p class="mt-2">Loading employee data...</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- System Settings View (Admin Only) -->
-        <div class="view-content d-none" id="settings-view">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            System Configuration
-                        </div>
-                        <div class="card-body">
-                            <form id="system-settings-form">
-                                <div class="mb-3">
-                                    <label class="form-label">Company Name</label>
-                                    <input type="text" class="form-control" id="company-name" value="Acme Inc.">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Working Hours</label>
-                                    <input type="text" class="form-control" id="working-hours" value="9:00 AM - 6:00 PM">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Default Leave Days</label>
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <input type="number" class="form-control" id="sick-leave-days" value="12" min="0">
-                                            <small class="text-muted">Sick Leave Days</small>
+                <!-- Leave & WFH View -->
+                <div class="view-content d-none" id="leave-view">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Apply for Leave/WFH</div>
+                                <div class="card-body">
+                                    <form id="leave-form">
+                                        <div class="mb-3">
+                                            <label class="form-label">Type</label>
+                                            <select class="form-select" id="leave-type">
+                                                <option value="leave">Leave</option>
+                                                <option value="wfh">Work From Home</option>
+                                            </select>
                                         </div>
-                                        <div class="col-6">
-                                            <input type="number" class="form-control" id="vacation-leave-days" value="18" min="0">
-                                            <small class="text-muted">Vacation Leave Days</small>
+                                        <div class="mb-3">
+                                            <label class="form-label">Start Date</label>
+                                            <input type="date" class="form-control" id="leave-start" required>
                                         </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">End Date</label>
+                                            <input type="date" class="form-control" id="leave-end" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Reason</label>
+                                            <textarea class="form-control" id="leave-reason" rows="3" required></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Your Requests</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Type</th>
+                                                    <th>Date</th>
+                                                    <th>Reason</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="leave-requests-table"></tbody>
+                                        </table>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary">Save Settings</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            Data Management
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-outline-primary" id="export-data-btn">
-                                    <i class="fas fa-file-export me-2"></i> Export Employee Data
-                                </button>
-                                <button class="btn btn-outline-secondary" id="backup-data-btn">
-                                    <i class="fas fa-database me-2"></i> Create System Backup
-                                </button>
-                                <button class="btn btn-outline-danger" id="reset-data-btn">
-                                    <i class="fas fa-trash-alt me-2"></i> Reset Test Data
-                                </button>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            System Information
-                        </div>
-                        <div class="card-body">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Version
-                                    <span class="badge bg-primary">1.0.0</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Last Backup
-                                    <span>June 10, 2025</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Total Employees
-                                    <span id="sys-total-employees">0</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    Storage Used
-                                    <span>15.2 MB</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Profile View -->
-        <div class="view-content d-none" id="profile-view">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header text-center">
-                            My Profile
-                        </div>
-                        <div class="card-body text-center">
-                            <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center rounded-circle mx-auto" style="width: 100px; height: 100px; font-size: 2.5rem;">
-                                <span id="profile-initials">JD</span>
-                            </div>
-                            <h5 class="mt-3 mb-1" id="profile-name">John Doe</h5>
-                            <p class="text-muted mb-3" id="profile-role">Employee</p>
                             
-                            <div class="text-start">
-                                <p class="mb-2"><i class="fas fa-envelope me-2"></i> <span id="profile-email">john.doe@company.com</span></p>
-                                <p class="mb-2"><i class="fas fa-phone me-2"></i> <span id="profile-phone">+1 234 567 890</span></p>
-                                <p class="mb-2"><i class="fas fa-briefcase me-2"></i> <span id="profile-department">Development</span></p>
-                                <p class="mb-0"><i class="fas fa-calendar-alt me-2"></i> Joined on <span id="profile-join-date">Jan 15, 2023</span></p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mt-4">
-                        <div class="card-header text-center">
-                            Quick Stats
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center">
-                                <div class="col-6 mb-3">
-                                    <h5 class="mb-0" id="profile-present">0</h5>
-                                    <small class="text-muted">Days Present</small>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <h5 class="mb-0" id="profile-leave">0</h5>
-                                    <small class="text-muted">Days on Leave</small>
-                                </div>
-                                <div class="col-6">
-                                    <h5 class="mb-0" id="profile-wfh">0</h5>
-                                    <small class="text-muted">WFH Days</small>
-                                </div>
-                                <div class="col-6">
-                                    <h5 class="mb-0" id="profile-late">0</h5>
-                                    <small class="text-muted">Late Arrivals</small>
+                            <div class="card mt-4">
+                                <div class="card-header">Pending Approvals (Admin/Manager)</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Employee</th>
+                                                    <th>Type</th>
+                                                    <th>Date</th>
+                                                    <th>Reason</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="pending-approvals-table"></tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            Edit Profile
+                <!-- Tasks View -->
+                <div class="view-content d-none" id="tasks-view">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Your Tasks</span>
+                                    <button class="btn btn-sm btn-primary" id="add-task-btn-2">Add Task</button>
+                                </div>
+                                <div class="card-body" id="user-tasks-container-2"></div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <form id="profile-form">
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">First Name</label>
-                                        <input type="text" class="form-control" id="profile-first-name" required>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Team Tasks</span>
+                                    <div class="btn-group">
+                                        <select class="form-select form-select-sm" id="task-filter">
+                                            <option value="all">All Tasks</option>
+                                            <option value="assigned">Assigned</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="missed">Missed</option>
+                                        </select>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Last Name</label>
-                                        <input type="text" class="form-control" id="profile-last-name" required>
+                                </div>
+                                <div class="card-body" id="team-tasks-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Appreciations View -->
+                <div class="view-content d-none" id="appreciations-view">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Give Appreciation</span>
+                                </div>
+                                <div class="card-body">
+                                    <form id="appreciation-form">
+                                        <div class="mb-3">
+                                            <label class="form-label">Employee</label>
+                                            <select class="form-select" id="appreciation-employee" required>
+                                                <option value="">Select Employee</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Task</label>
+                                            <select class="form-select" id="appreciation-task" required>
+                                                <option value="">Select Task</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Appreciation Note</label>
+                                            <textarea class="form-control" id="appreciation-note" rows="3" placeholder="Write your appreciation message..." required></textarea>
+                                        </div>
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="appreciation-public" checked>
+                                            <label class="form-check-label">Make this appreciation public to the team</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Submit Appreciation</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Team Appreciations</span>
+                                    <div class="btn-group">
+                                        <select class="form-select form-select-sm" id="appreciation-filter">
+                                            <option value="all">All Appreciations</option>
+                                            <option value="public">Public Only</option>
+                                            <option value="mine">My Appreciations</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="profile-email-input" disabled>
+                                <div class="card-body" id="team-appreciations-container" style="max-height: 500px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Analytics View -->
+                <div class="view-content d-none" id="analytics-view">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">Weekly Attendance Analytics</div>
+                                <div class="card-body">
+                                    <div class="analytics-chart">
+                                        <canvas id="attendance-chart"></canvas>
+                                    </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Phone Number</label>
-                                    <input type="tel" class="form-control" id="profile-phone-input">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">Task Completion Rate</div>
+                                <div class="card-body">
+                                    <div class="analytics-chart">
+                                        <canvas id="tasks-chart"></canvas>
+                                    </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Department</label>
-                                    <select class="form-select" id="profile-department-select" disabled>
-                                        <option value="hr">HR</option>
-                                        <option value="developer">Developer</option>
-                                        <option value="web-developer">Web Developer</option>
-                                        <option value="graphic-designer">Graphic Designer</option>
-                                        <option value="digital-marketer">Digital Marketer</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Update Profile</button>
-                            </form>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            Change Password
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Leave & WFH Distribution</div>
+                                <div class="card-body">
+                                    <div class="analytics-chart">
+                                        <canvas id="leave-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Monthly Performance</div>
+                                <div class="card-body">
+                                    <div class="analytics-chart">
+                                        <canvas id="performance-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Employees View -->
+                <div class="view-content d-none" id="employees-view">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center"><span>Employee List</span><button class="btn btn-primary btn-sm" id="add-employee-btn"><i class="fas fa-plus me-1"></i> Add Employee</button></div>
+                        <div class="card-body"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="employees-table"></tbody></table></div></div>
+                    </div>
+                </div>
+                
+                <!-- Profile View -->
+                <div class="view-content d-none" id="profile-view">
+                    <div class="card">
+                        <div class="card-header">Your Profile</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    <img src="https://ui-avatars.com/api/?name=User+Name&background=4361ee&color=fff" alt="Profile" class="profile-pic mb-3">
+                                    <button class="btn btn-outline-primary btn-sm w-100">Change Photo</button>
+                                </div>
+                                
+                                <div class="col-md-9">
+                                    <form id="profile-form">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">First Name</label>
+                                                <input type="text" class="form-control" id="profile-first-name" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Last Name</label>
+                                                <input type="text" class="form-control" id="profile-last-name" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="profile-email" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Phone</label>
+                                                <input type="tel" class="form-control" id="profile-phone">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Department</label>
+                                                <select class="form-select" id="profile-department" required>
+                                                    <option value="hr">HR</option>
+                                                    <option value="developer">Developer</option>
+                                                    <option value="web-developer">Web Developer</option>
+                                                    <option value="graphic-designer">Graphic Designer</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Date of Birth</label>
+                                                <input type="date" class="form-control" id="profile-dob">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Address</label>
+                                            <textarea class="form-control" id="profile-address" rows="2"></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Change Password View -->
+                <div class="view-content d-none" id="password-view">
+                    <div class="card">
+                        <div class="card-header">Change Password</div>
                         <div class="card-body">
                             <form id="password-form">
                                 <div class="mb-3">
                                     <label class="form-label">Current Password</label>
                                     <input type="password" class="form-control" id="current-password" required>
                                 </div>
+                                
                                 <div class="mb-3">
                                     <label class="form-label">New Password</label>
                                     <input type="password" class="form-control" id="new-password" required>
-                                    <small class="text-muted">Password must be at least 8 characters long</small>
+                                    <div class="password-strength mt-1" id="password-strength"></div>
+                                    <small class="text-muted">Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.</small>
                                 </div>
+                                
                                 <div class="mb-3">
                                     <label class="form-label">Confirm New Password</label>
                                     <input type="password" class="form-control" id="confirm-password" required>
                                 </div>
+                                
                                 <button type="submit" class="btn btn-primary">Change Password</button>
                             </form>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Settings View -->
+                <div class="view-content d-none" id="settings-view">
+                    <div class="card">
+                        <div class="card-header">Data Management</div>
+                        <div class="card-body"><p class="text-muted">This will reset all employees to the original 3 demo users. Any new employees you have added will be removed.</p><button class="btn btn-outline-danger" id="reset-data-btn"><i class="fas fa-database me-2"></i> Reset Demo Data</button></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-</div>
 
-<!-- Add Employee Modal -->
-
-<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Employee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="add-employee-form">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="employee-first-name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="employee-last-name" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="employee-email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Department</label>
-                        <select class="form-select" id="employee-department" required>
-                            <option value="">Select department</option>
-                            <option value="hr">HR</option>
-                            <option value="developer">Developer</option>
-                            <option value="web-developer">Web Developer</option>
-                            <option value="graphic-designer">Graphic Designer</option>
-                            <option value="digital-marketer">Digital Marketer</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select class="form-select" id="employee-role" required>
-                            <option value="">Select role</option>
-                            <option value="employee">Employee</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-control" id="employee-password" required>
-                        <small class="text-muted">Default password that employee can change later</small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save-employee-btn">Add Employee</button>
-            </div>
+    <!-- Modals -->
+    <div class="modal fade" id="employeeModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="employeeModalTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form id="employee-form" onsubmit="return false;">
+                <input type="hidden" id="employee-id">
+                <div class="row mb-3">
+                    <div class="col-md-6"><label class="form-label">First Name</label><input type="text" class="form-control" id="employee-first-name" required></div>
+                    <div class="col-md-6"><label class="form-label">Last Name</label><input type="text" class="form-control" id="employee-last-name" required></div>
+                </div>
+                <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" id="employee-email" required></div>
+                <div class="mb-3"><label class="form-label">Department</label><select class="form-select" id="employee-department" required><option value="">Select...</option><option value="hr">HR</option><option value="developer">Developer</option><option value="web-developer">Web Developer</option><option value="graphic-designer">Graphic Designer</option></select></div>
+                <div class="mb-3"><label class="form-label">Role</label><select class="form-select" id="employee-role" required><option value="">Select...</option><option value="employee">Employee</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+                <div class="mb-3" id="password-field-group"><label class="form-label">Password</label><input type="password" class="form-control" id="employee-password" required minlength="6"><small class="text-muted">Min. 6 characters.</small></div>
+                <div class="mb-3 d-none" id="status-field-group"><label class="form-label">Status</label><select class="form-select" id="employee-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+            </form>
         </div>
-    </div>
-</div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="save-employee-btn">Save</button></div>
+    </div></div></div>
 
-<!-- Edit Employee Modal -->
-
-<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Employee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="edit-employee-form">
-                    <input type="hidden" id="edit-employee-id">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="edit-employee-first-name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="edit-employee-last-name" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="edit-employee-email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Department</label>
-                        <select class="form-select" id="edit-employee-department" required>
-                            <option value="">Select department</option>
-                            <option value="hr">HR</option>
-                            <option value="developer">Developer</option>
-                            <option value="web-developer">Web Developer</option>
-                            <option value="graphic-designer">Graphic Designer</option>
-                            <option value="digital-marketer">Digital Marketer</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select class="form-select" id="edit-employee-role" required>
-                            <option value="">Select role</option>
-                            <option value="employee">Employee</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" id="edit-employee-status" required>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="update-employee-btn">Update Employee</button>
-            </div>
+    <div class="modal fade" id="taskModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title" id="taskModalTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="mb-3">
+                    <label class="form-label">Task Title</label>
+                    <input type="text" class="form-control" id="task-title" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="task-description" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Assign To</label>
+                    <select class="form-select" id="task-assignee" required>
+                        <option value="">Select Employee</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Deadline</label>
+                    <input type="date" class="form-control" id="task-deadline" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select" id="task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            </form>
         </div>
-    </div>
-</div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="save-task-btn">Save Task</button></div>
+    </div></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    // Firebase configuration (replace with your actual config to use live services)
- const firebaseConfig = {
-  apiKey: "AIzaSyB0hENtFKxMRwdy7fxP27sijKiOcjE8Qo0",
-  authDomain: "sailucky-f0f03.firebaseapp.com",
-  projectId: "sailucky-f0f03",
-  storageBucket: "sailucky-f0f03.firebasestorage.app",
-  messagingSenderId: "261847273939",
-  appId: "1:261847273939:web:3f15735e0d5be81c509f26",
-  measurementId: "G-R3393J1D9L"
-};
-    
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    
-    // DOM Elements
-    const authScreen = document.getElementById('auth-screen');
-    const dashboard = document.getElementById('dashboard');
-    const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const viewLinks = document.querySelectorAll('.sidebar-menu a');
-    const viewContents = document.querySelectorAll('.view-content');
-    const viewTitle = document.getElementById('view-title');
-    const userName = document.getElementById('user-name');
-    const userRole = document.getElementById('user-role');
-    const userInitials = document.getElementById('user-initials');
-    const currentDate = document.getElementById('current-date');
-    const loginError = document.getElementById('login-error');
-    const emailError = document.getElementById('email-error');
-    const passwordError = document.getElementById('password-error');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const mainMenu = document.getElementById('main-menu');
-    
-    // Set current date
-    const today = new Date();
-    currentDate.textContent = today.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    });
-    
-    // --- UPDATED DEMO DATA ---
-    const demoEmployees = [
-        { id: 'emp001', firstName: 'Srini', lastName: 'G', email: 'srini@ay-technologies.com', password: 'srini@', department: 'hr', role: 'admin', joinDate: 'Jan 1, 2023', phone: '+91 9618222498', status: 'active' },
-        { id: 'emp002', firstName: 'Vamsi', lastName: 'Krishna', email: 'vamsi@ay-technologies.com', password: 'vamsi@', department: 'web-developer', role: 'manager', joinDate: 'Feb 15, 2023', phone: '+91 84998 04829', status: 'active' },
-        { id: 'emp003', firstName: 'sai', lastName: 'kiran', email: 'kiran@ay-technologies.com', password: 'kiran@', department: 'digital-marketer', role: 'employee', joinDate: 'Mar 10, 2023', phone: '+91 97009 94265', status: 'active' },
-        { id: 'emp004', firstName: 'Pragnika', lastName: 'Reddy', email: 'pragnika@ay-technologies.com', password: 'pragnika@', department: 'graphic-designer', role: 'employee', joinDate: 'Apr 5, 2023', phone: '+91 96405 67209', status: 'active' },
-        { id: 'emp005', firstName: 'Hemanth', lastName: 'h', email: 'hemanth@ay-technologies.com', password: 'Hemanth@', department: 'developer', role: 'employee', joinDate: 'May 20, 2023', phone: '+1 234 567 8905', status: 'active' }
-    ];
-    
-    // Session data (will be populated on login)
-    let currentUser = null;
-    let employees = [];
-    let notifications = [];
-    let leaveRequests = [];
-    let wfhRequests = [];
-    let attendanceRecords = [];
-    // ** NEW: Variable to track clock-in state for the current session **
-    let sessionClockStatus = {
-        clockedIn: false,
-        clockInTime: null,
-        clockedOutForDay: false
-    };
-
-    // Helper function to format department names for display
-    function formatDepartmentName(dept) {
-        if (!dept) return '';
-        if (dept.toLowerCase() === 'hr') return 'HR';
-        return dept.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    }
-    
-    // Initialize the application
-    function initApp() {
-        showAuthScreen();
-        setupEventListeners();
-    }
-    
-    // Set up all event listeners
-    function setupEventListeners() {
-        loginBtn.addEventListener('click', handleLogin);
-        logoutBtn.addEventListener('click', handleLogout);
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentUser = null;
+        let employeeModal = null;
+        let taskModal = null;
+        let clockedIn = false;
+        let clockInTime = null;
         
-        viewLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
+        const DOMElements = {
+            loadingSpinner: document.getElementById('loading-spinner'),
+            authScreen: document.getElementById('auth-screen'),
+            dashboard: document.getElementById('dashboard'),
+            loginBtn: document.getElementById('login-btn'),
+            logoutBtn: document.getElementById('logout-btn'),
+            viewLinks: document.querySelectorAll('.sidebar-menu a'),
+            viewContents: document.querySelectorAll('.view-content'),
+            viewTitle: document.getElementById('view-title'),
+            employeeForm: document.getElementById('employee-form'),
+            saveEmployeeBtn: document.getElementById('save-employee-btn'),
+            addEmployeeBtn: document.getElementById('add-employee-btn'),
+            resetDataBtn: document.getElementById('reset-data-btn'),
+            setupLink: document.getElementById('setup-link'),
+            clockBtn: document.getElementById('clock-btn'),
+            addTaskBtn: document.getElementById('add-task-btn'),
+            addTaskBtn2: document.getElementById('add-task-btn-2'),
+            addAppreciationBtn: document.getElementById('add-appreciation-btn'),
+            taskForm: document.getElementById('task-form'),
+            saveTaskBtn: document.getElementById('save-task-btn'),
+            appreciationForm: document.getElementById('appreciation-form'),
+            leaveForm: document.getElementById('leave-form'),
+            profileForm: document.getElementById('profile-form'),
+            passwordForm: document.getElementById('password-form'),
+        };
+
+        // =================================================================
+        // == LOCAL STORAGE DATABASE
+        // =================================================================
+        const db = {
+            getEmployees: () => {
+                return JSON.parse(localStorage.getItem('employees')) || [];
+            },
+            saveEmployees: (employees) => {
+                localStorage.setItem('employees', JSON.stringify(employees));
+            },
+            getTasks: () => {
+                return JSON.parse(localStorage.getItem('tasks')) || [];
+            },
+            saveTasks: (tasks) => {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            },
+            getAppreciations: () => {
+                return JSON.parse(localStorage.getItem('appreciations')) || [];
+            },
+            saveAppreciations: (appreciations) => {
+                localStorage.setItem('appreciations', JSON.stringify(appreciations));
+            },
+            getLeaves: () => {
+                return JSON.parse(localStorage.getItem('leaves')) || [];
+            },
+            saveLeaves: (leaves) => {
+                localStorage.setItem('leaves', JSON.stringify(leaves));
+            },
+            getAttendance: () => {
+                return JSON.parse(localStorage.getItem('attendance')) || [];
+            },
+            saveAttendance: (attendance) => {
+                localStorage.setItem('attendance', JSON.stringify(attendance));
+            },
+            getCurrentUser: () => {
+                return JSON.parse(sessionStorage.getItem('currentUser'));
+            },
+            setCurrentUser: (user) => {
+                if (user) {
+                    sessionStorage.setItem('currentUser', JSON.stringify(user));
+                } else {
+                    sessionStorage.removeItem('currentUser');
+                }
+            },
+            init: () => {
+                if (!localStorage.getItem('employees')) {
+                    db.reset();
+                }
+                
+                // Initialize demo data for tasks, appreciations, leaves, and attendance
+                if (!localStorage.getItem('tasks')) {
+                    const tasks = [
+                        { id: 1, title: "Complete Q2 Report", description: "Prepare quarterly financial report", assignee: 3, assignedBy: 1, deadline: "2024-07-15", priority: "high", status: "completed", appreciation: { note: "Excellent work on the report!", givenBy: 1, date: "2024-07-15", public: true } },
+                        { id: 2, title: "Client Onboarding", description: "Prepare documentation for new client", assignee: 3, assignedBy: 2, deadline: "2024-07-25", priority: "medium", status: "assigned" },
+                        { id: 3, title: "Website Redesign", description: "Complete homepage redesign", assignee: 2, assignedBy: 1, deadline: "2024-07-10", priority: "high", status: "completed", appreciation: { note: "Great design work!", givenBy: 1, date: "2024-07-11", public: true } },
+                        { id: 4, title: "SEO Optimization", description: "Implement SEO recommendations", assignee: 2, assignedBy: 1, deadline: "2024-07-05", priority: "medium", status: "missed" },
+                        { id: 5, title: "Server Migration", description: "Migrate to new data center", assignee: 3, assignedBy: 2, deadline: "2024-07-30", priority: "high", status: "assigned" }
+                    ];
+                    db.saveTasks(tasks);
+                }
+                
+                if (!localStorage.getItem('appreciations')) {
+                    const appreciations = [
+                        { id: 1, employeeId: 3, taskId: 1, note: "Excellent work on the Q2 Financial Report! Very detailed and insightful.", givenBy: 1, date: "2024-07-15", public: true },
+                        { id: 2, employeeId: 2, taskId: 3, note: "Design team delivered an outstanding website redesign ahead of schedule!", givenBy: 1, date: "2024-07-11", public: true },
+                        { id: 3, employeeId: 3, taskId: 2, note: "Great job handling the client onboarding process smoothly.", givenBy: 2, date: "2024-07-18", public: true }
+                    ];
+                    db.saveAppreciations(appreciations);
+                }
+                
+                if (!localStorage.getItem('leaves')) {
+                    const leaves = [
+                        { id: 1, employeeId: 3, type: "wfh", startDate: "2024-07-10", endDate: "2024-07-12", reason: "Home renovation", status: "approved" },
+                        { id: 2, employeeId: 2, type: "leave", startDate: "2024-07-20", endDate: "2024-07-22", reason: "Family event", status: "pending" },
+                        { id: 3, employeeId: 1, type: "wfh", startDate: "2024-07-05", endDate: "2024-07-05", reason: "Doctor appointment", status: "approved" }
+                    ];
+                    db.saveLeaves(leaves);
+                }
+                
+                if (!localStorage.getItem('attendance')) {
+                    const attendance = [
+                        { employeeId: 1, date: "2024-07-01", clockIn: "09:05", clockOut: "17:30", status: "present" },
+                        { employeeId: 1, date: "2024-07-02", clockIn: "08:55", clockOut: "17:45", status: "present" },
+                        { employeeId: 1, date: "2024-07-03", clockIn: "09:15", clockOut: "17:20", status: "present" },
+                        { employeeId: 1, date: "2024-07-04", clockIn: "09:00", clockOut: "17:00", status: "present" },
+                        { employeeId: 1, date: "2024-07-05", clockIn: "10:00", clockOut: "16:00", status: "wfh" },
+                        { employeeId: 2, date: "2024-07-01", clockIn: "09:10", clockOut: "17:20", status: "present" },
+                        { employeeId: 2, date: "2024-07-02", clockIn: "09:00", clockOut: "17:30", status: "present" },
+                        { employeeId: 2, date: "2024-07-03", clockIn: "09:05", clockOut: "17:25", status: "present" },
+                        { employeeId: 2, date: "2024-07-04", clockIn: "09:20", clockOut: "17:10", status: "present" },
+                        { employeeId: 3, date: "2024-07-01", clockIn: "08:50", clockOut: "17:40", status: "present" },
+                        { employeeId: 3, date: "2024-07-02", clockIn: "09:00", clockOut: "17:30", status: "present" },
+                        { employeeId: 3, date: "2024-07-03", clockIn: "08:55", clockOut: "17:35", status: "present" },
+                        { employeeId: 3, date: "2024-07-04", clockIn: "09:10", clockOut: "17:20", status: "present" },
+                        { employeeId: 3, date: "2024-07-05", clockIn: "09:00", clockOut: "17:00", status: "present" }
+                    ];
+                    db.saveAttendance(attendance);
+                }
+            },
+            reset: () => {
+                 const initialUsers = [
+                    { id: 1, firstName: 'Srini', lastName: 'G', email: 'srini@ay-technologies.com', password: 'password123', department: 'hr', role: 'admin', status: 'active', joinDate: new Date().toISOString() },
+                    { id: 2, firstName: 'Vamsi', lastName: 'Krishna', email: 'vamsi@ay-technologies.com', password: 'password123', department: 'web-developer', role: 'manager', status: 'active', joinDate: new Date().toISOString() },
+                    { id: 3, firstName: 'Sai', lastName: 'Kiran', email: 'kiran@ay-technologies.com', password: 'password123', department: 'web-developer', role: 'employee', status: 'active', joinDate: new Date().toISOString() }
+                ];
+                db.saveEmployees(initialUsers);
+                
+                // Reset other data
+                localStorage.removeItem('tasks');
+                localStorage.removeItem('appreciations');
+                localStorage.removeItem('leaves');
+                localStorage.removeItem('attendance');
+                db.init();
+            }
+        };
+
+        // =================================================================
+        // == APP INITIALIZATION
+        // =================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            db.init();
+            employeeModal = new bootstrap.Modal(document.getElementById('employeeModal'));
+            taskModal = new bootstrap.Modal(document.getElementById('taskModal'));
+            
+            // Check for a logged-in user in the session
+            currentUser = db.getCurrentUser();
+            if (currentUser) {
+                showDashboard();
+            } else {
+                showAuthScreen();
+            }
+            
+            // Setup event listeners for login screen
+            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            document.getElementById('setup-link').addEventListener('click', (e) => {
                 e.preventDefault();
-                if(link.id === 'logout-btn') return;
-                viewLinks.forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                const viewName = link.getAttribute('data-view');
-                const title = link.textContent.trim();
-                viewTitle.textContent = title;
-                viewContents.forEach(view => view.classList.add('d-none'));
-                document.getElementById(`${viewName}-view`).classList.remove('d-none');
-                loadViewData(viewName);
-                if(window.innerWidth < 992) {
-                    document.querySelector('.sidebar').classList.remove('active');
+                if(confirm("This will set up the default demo users. Any existing data will be erased. Proceed?")){
+                    db.reset();
+                    showAlert("Demo data has been set up. You can now log in.", "success");
                 }
             });
         });
-        
-        document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
-        
-        document.getElementById('clock-btn').addEventListener('click', handleClockInOut);
-        document.getElementById('leave-form').addEventListener('submit', handleLeaveRequest);
-        document.getElementById('wfh-form').addEventListener('submit', handleWFHRequest);
-        document.getElementById('profile-form').addEventListener('submit', handleProfileUpdate);
-        document.getElementById('password-form').addEventListener('submit', handlePasswordChange);
-        document.getElementById('add-employee-btn').addEventListener('click', () => {
-            document.getElementById('add-employee-form').reset();
-            new bootstrap.Modal(document.getElementById('addEmployeeModal')).show();
-        });
-        document.getElementById('save-employee-btn').addEventListener('click', handleAddEmployee);
-        document.getElementById('update-employee-btn').addEventListener('click', handleUpdateEmployee);
-        document.getElementById('system-settings-form').addEventListener('submit', handleSystemSettings);
-        document.getElementById('department-filter').addEventListener('change', filterEmployeesByDepartment);
-        document.getElementById('export-data-btn').addEventListener('click', handleExportData);
-        document.getElementById('backup-data-btn').addEventListener('click', handleBackupData);
-        document.getElementById('reset-data-btn').addEventListener('click', handleResetData);
-    }
 
-    // =================================================================
-    // == DATA INITIALIZATION AND MANAGEMENT FUNCTIONS
-    // =================================================================
+        function setupEventListeners() {
+            DOMElements.loginBtn.addEventListener('click', handleLogin);
+            DOMElements.logoutBtn.addEventListener('click', handleLogout);
+            DOMElements.addEmployeeBtn.addEventListener('click', openEmployeeModalForAdd);
+            DOMElements.saveEmployeeBtn.addEventListener('click', handleSaveEmployee);
+            DOMElements.resetDataBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to reset all data to the default demo users?")) {
+                    db.reset();
+                    showAlert("Demo data has been reset.", "success");
+                    loadEmployees();
+                    loadDashboardStats();
+                    loadEmployeeStatus();
+                }
+            });
 
-    function initializeSessionData() {
-        employees = JSON.parse(JSON.stringify(demoEmployees));
-        notifications = [
-            { id: 1, type: 'leave', message: 'New leave request from a colleague', read: false, date: '2025-06-14' },
-            { id: 2, type: 'wfh', message: 'WFH request approved for tomorrow', read: false, date: '2025-06-14' },
-            { id: 3, type: 'attendance', message: 'Attendance reminder: Clock in required', read: false, date: '2025-06-13' }
-        ];
-        // Generate mock data for the new session
-        generateMockData();
-    }
-
-    function refreshAllEmployeeDependentViews() {
-        if (!document.getElementById('employees-view').classList.contains('d-none')) {
-            renderEmployeesTable();
-        }
-        updateDashboardStats(); 
-        loadEmployeeStatus();
-    }
-
-    // =================================================================
-    // == AUTHENTICATION
-    // =================================================================
-    
-    // ** CORRECTED LOGIN FUNCTION **
-    function handleLogin(e) {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value;
-        
-        loginError.classList.add('d-none');
-        emailError.classList.add('d-none');
-        passwordError.classList.add('d-none');
-        
-        let hasError = false;
-        if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-            emailError.textContent = 'Please enter a valid email.';
-            emailError.classList.remove('d-none');
-            hasError = true;
-        }
-        if (!password) {
-            passwordError.textContent = 'Please enter your password.';
-            passwordError.classList.remove('d-none');
-            hasError = true;
-        }
-        if(hasError) return;
-        
-        showLoading();
-        
-        // This timeout simulates a network request
-        setTimeout(() => {
-            // Find the user in our local demo data array
-            const foundUser = demoEmployees.find(emp => emp.email.toLowerCase() === email.toLowerCase());
+            DOMElements.viewLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if(link.id === 'logout-btn') return;
+                    DOMElements.viewLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    const viewName = link.dataset.view;
+                    DOMElements.viewTitle.textContent = link.textContent.trim();
+                    DOMElements.viewContents.forEach(view => view.classList.add('d-none'));
+                    document.getElementById(`${viewName}-view`).classList.remove('d-none');
+                    loadViewData(viewName);
+                });
+            });
             
-            // Check if the user was found and the password matches
-            if (!foundUser || foundUser.password !== password) {
-                loginError.textContent = 'Invalid credentials.';
-            } else if (foundUser.status !== 'active') {
-                loginError.textContent = 'This account has been disabled.';
+            DOMElements.clockBtn.addEventListener('click', toggleClock);
+            DOMElements.addTaskBtn.addEventListener('click', openTaskModal);
+            DOMElements.addTaskBtn2.addEventListener('click', openTaskModal);
+            DOMElements.saveTaskBtn.addEventListener('click', handleSaveTask);
+            DOMElements.addAppreciationBtn.addEventListener('click', () => {
+                // Switch to appreciations view and show form
+                document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
+                document.querySelector('[data-view="appreciations"]').classList.add('active');
+                DOMElements.viewContents.forEach(view => view.classList.add('d-none'));
+                document.getElementById('appreciations-view').classList.remove('d-none');
+                DOMElements.viewTitle.textContent = "Appreciations";
+            });
+            
+            DOMElements.appreciationForm.addEventListener('submit', handleSaveAppreciation);
+            DOMElements.leaveForm.addEventListener('submit', handleSaveLeave);
+            DOMElements.profileForm.addEventListener('submit', handleSaveProfile);
+            DOMElements.passwordForm.addEventListener('submit', handleChangePassword);
+            
+            document.getElementById('task-filter').addEventListener('change', loadTeamTasks);
+            document.getElementById('appreciation-filter').addEventListener('change', loadTeamAppreciations);
+            
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            
+            // Mobile menu button
+            document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+            
+            // Password strength indicator
+            document.getElementById('new-password').addEventListener('input', function() {
+                const strength = calculatePasswordStrength(this.value);
+                const strengthBar = document.getElementById('password-strength');
+                strengthBar.className = 'password-strength strength-' + strength;
+            });
+        }
+
+        function calculatePasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            return Math.min(strength, 4);
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('login-email').value.toLowerCase();
+            const password = document.getElementById('login-password').value;
+            if (!email || !password) { showAlert('Email and password are required.', 'warning'); return; }
+
+            const employees = db.getEmployees();
+            const foundUser = employees.find(emp => emp.email.toLowerCase() === email && emp.password === password);
+
+            if (foundUser) {
+                if (foundUser.status === 'active') {
+                    currentUser = foundUser;
+                    db.setCurrentUser(currentUser);
+                    showDashboard();
+                } else {
+                    showAlert('Your account is inactive.', 'danger');
+                }
             } else {
-                // If login is successful
-                currentUser = { ...foundUser };
-                
-                initializeSessionData();
-                
-                showDashboard();
-                updateUIForUserRole();
-                loadInitialData();
-                hideLoading();
-                return; // Exit the function on success
+                showAlert('Invalid email or password.', 'danger');
+            }
+        }
+        
+        function handleLogout() {
+            currentUser = null;
+            db.setCurrentUser(null);
+            showAuthScreen();
+        }
+
+        function showDashboard() {
+            DOMElements.authScreen.classList.add('d-none');
+            DOMElements.dashboard.classList.remove('d-none');
+            updateUIForUserRole();
+            loadViewData('dashboard');
+            setupEventListeners();
+        }
+
+        function showAuthScreen() {
+            DOMElements.dashboard.classList.add('d-none');
+            DOMElements.authScreen.classList.remove('d-none');
+        }
+
+        // =================================================================
+        // == UI & DATA DISPLAY
+        // =================================================================
+        function updateUIForUserRole() {
+            if (!currentUser) return;
+            document.getElementById('user-name').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+            document.getElementById('user-initials').textContent = `${currentUser.firstName.charAt(0)}${currentUser.lastName.charAt(0)}`;
+            const roleEl = document.getElementById('user-role');
+            roleEl.textContent = currentUser.role;
+            roleEl.className = `user-role role-${currentUser.role}`;
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('d-none', currentUser.role !== 'admin'));
+        }
+
+        function loadViewData(viewName) {
+            switch(viewName) {
+                case 'dashboard': 
+                    loadDashboardStats(); 
+                    loadEmployeeStatus(); 
+                    loadUserTasks();
+                    loadRecentAppreciations();
+                    break;
+                case 'attendance': 
+                    loadAttendanceRecords(); 
+                    break;
+                case 'leave': 
+                    loadLeaveRequests(); 
+                    loadPendingApprovals();
+                    break;
+                case 'tasks': 
+                    loadUserTasks(); 
+                    loadTeamTasks(); 
+                    break;
+                case 'appreciations': 
+                    loadAppreciationFormData();
+                    loadTeamAppreciations(); 
+                    break;
+                case 'analytics': 
+                    loadAnalyticsCharts(); 
+                    break;
+                case 'employees': 
+                    if(currentUser.role === 'admin') loadEmployees(); 
+                    break;
+                case 'profile': 
+                    loadProfileData(); 
+                    break;
+                case 'password': 
+                    // Nothing to load initially
+                    break;
+            }
+        }
+
+        function loadDashboardStats() {
+            const employees = db.getEmployees().filter(e => e.status === 'active');
+            document.getElementById('total-employees').textContent = employees.length;
+            document.getElementById('present-today').textContent = Math.floor(employees.length * 0.7);
+            document.getElementById('on-leave').textContent = Math.floor(employees.length * 0.1);
+            document.getElementById('wfh-today').textContent = employees.length - parseInt(document.getElementById('present-today').textContent) - parseInt(document.getElementById('on-leave').textContent);
+        }
+
+        function loadEmployeeStatus() {
+            const container = document.getElementById('employee-status-container');
+            container.innerHTML = '';
+            const employees = db.getEmployees().filter(e => e.status === 'active');
+            
+            if (employees.length === 0) { container.innerHTML = `<div class="text-center py-4 text-muted">No active employees found.</div>`; return; }
+            employees.forEach(employee => {
+                const status = ['Present', 'On Leave', 'WFH', 'Absent'][Math.floor(Math.random() * 4)];
+                const statusClass = { Present: 'success', 'On Leave': 'info', WFH: 'warning', Absent: 'danger' }[status];
+                container.innerHTML += `<div class="employee-card">
+                    <div class="employee-avatar">${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}</div>
+                    <div class="employee-info"><h6 class="mb-0">${employee.firstName} ${employee.lastName}</h6><small class="text-muted">${employee.department.replace('-', ' ')}</small></div>
+                    <span class="status-badge bg-${statusClass}">${status}</span></div>`;
+            });
+        }
+        
+        function loadUserTasks() {
+            const container = document.getElementById('user-tasks-container');
+            const container2 = document.getElementById('user-tasks-container-2');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            container2.innerHTML = '';
+            
+            const tasks = db.getTasks().filter(task => task.assignee == currentUser.id);
+            
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="text-center p-4 text-muted">No tasks assigned to you.</div>`;
+                container2.innerHTML = `<div class="text-center p-4 text-muted">No tasks assigned to you.</div>`;
+                return;
             }
             
-            // If we reach here, it means login failed
-            loginError.classList.remove('d-none');
-            hideLoading();
-
-        }, 1000);
-    }
-    
-    function handleLogout(e) {
-        e.preventDefault();
-        currentUser = null;
-        employees = [];
-        notifications = [];
-        leaveRequests = [];
-        wfhRequests = [];
-        attendanceRecords = [];
-        // Reset clock-in status on logout
-        sessionClockStatus = { clockedIn: false, clockInTime: null, clockedOutForDay: false };
-        showAuthScreen();
-    }
-    
-    function showAuthScreen() {
-        authScreen.classList.remove('d-none');
-        dashboard.classList.add('d-none');
-        document.getElementById('login-email').value = '';
-        document.getElementById('login-password').value = '';
-        loginError.classList.add('d-none');
-        emailError.classList.add('d-none');
-        passwordError.classList.add('d-none');
-    }
-    
-    function showDashboard() {
-        authScreen.classList.add('d-none');
-        dashboard.classList.remove('d-none');
-    }
-    
-    // =================================================================
-    // == UI AND VIEW LOADING
-    // =================================================================
-    
-    function updateUIForUserRole() {
-        if (!currentUser) return;
-        
-        userName.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-        userInitials.textContent = `${currentUser.firstName.charAt(0)}${currentUser.lastName.charAt(0)}`;
-        userRole.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
-        userRole.className = `user-role role-${currentUser.role}`;
-        
-        const adminOnlyItems = document.querySelectorAll('.admin-only');
-        const managerItems = document.querySelectorAll('.manager-only');
-        
-        adminOnlyItems.forEach(item => item.classList.add('d-none'));
-        managerItems.forEach(item => item.classList.add('d-none'));
-        
-        if (currentUser.role === 'admin') {
-            adminOnlyItems.forEach(item => item.classList.remove('d-none'));
-            managerItems.forEach(item => item.classList.remove('d-none'));
-        } else if (currentUser.role === 'manager') {
-            managerItems.forEach(item => item.classList.remove('d-none'));
+            tasks.forEach(task => {
+                const assigner = db.getEmployees().find(e => e.id == task.assignedBy) || {};
+                const taskHtml = `
+                    <div class="task-card p-3 mb-2 ${task.status}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">${task.title}</h6>
+                            <span class="task-status-badge task-${task.status}">${task.status}</span>
+                        </div>
+                        <p class="mb-2">${task.description}</p>
+                        <div class="d-flex justify-content-between text-muted small mb-2">
+                            <span><i class="fas fa-user me-1"></i> ${assigner.firstName || 'Admin'}</span>
+                            <span><i class="fas fa-calendar me-1"></i> ${task.deadline}</span>
+                            <span><i class="fas fa-flag me-1"></i> ${task.priority}</span>
+                        </div>
+                        ${task.status === 'assigned' ? `
+                        <div class="d-flex">
+                            <button class="btn btn-sm btn-success me-2 complete-task" data-id="${task.id}">Complete</button>
+                            <button class="btn btn-sm btn-outline-secondary request-extension" data-id="${task.id}">Extend Deadline</button>
+                        </div>` : ''}
+                        ${task.appreciation ? `
+                        <div class="appreciation-card mt-2 p-2">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="appreciation-badge me-2"><i class="fas fa-star"></i> Appreciation</span>
+                                <small>${task.appreciation.date}</small>
+                            </div>
+                            <p class="mb-0">${task.appreciation.note}</p>
+                        </div>` : ''}
+                    </div>`;
+                
+                container.innerHTML += taskHtml;
+                container2.innerHTML += taskHtml;
+            });
+            
+            // Add event listeners to task buttons
+            document.querySelectorAll('.complete-task').forEach(btn => {
+                btn.addEventListener('click', () => markTaskComplete(btn.dataset.id));
+            });
+            
+            document.querySelectorAll('.request-extension').forEach(btn => {
+                btn.addEventListener('click', () => requestExtension(btn.dataset.id));
+            });
         }
-    }
-    
-    function loadInitialData() {
-        if (!currentUser) return;
-        loadNotifications();
-        loadDashboardStats();
-        loadEmployeeStatus();
         
-        if (currentUser.role === 'manager' || currentUser.role === 'admin') {
-            loadPendingApprovals();
+        function requestExtension(taskId) {
+            showAlert("Extension requested for task. This feature is not fully implemented yet.", "info");
         }
-    }
-    
-    function loadViewData(viewName) {
-        switch(viewName) {
-            case 'dashboard': loadDashboardStats(); loadEmployeeStatus(); break;
-            case 'attendance': loadAttendanceData(); break;
-            case 'leave': loadLeaveData(); break;
-            case 'wfh': loadWFHData(); break;
-            case 'employees': loadEmployees(); break;
-            case 'profile': loadProfileData(); break;
-        }
-    }
-
-    // =================================================================
-    // == MOCK DATA GENERATION & RENDERING FOR VIEWS
-    // =================================================================
-
-    function generateMockData() {
-        leaveRequests = [
-            { id: 1, userId: currentUser.id, startDate: '2025-06-10', endDate: '2025-06-11', type: 'vacation', reason: 'Family trip', status: 'Approved' },
-            { id: 2, userId: currentUser.id, startDate: '2025-05-20', endDate: '2025-05-20', type: 'sick', reason: 'Fever', status: 'Approved' },
-        ];
-         wfhRequests = [
-            { id: 1, userId: currentUser.id, date: '2025-06-12', reason: 'Doctor appointment', status: 'Approved' },
-            { id: 2, userId: currentUser.id, date: '2025-06-05', reason: 'Plumber visit', status: 'Rejected' },
-        ];
-         attendanceRecords = [];
-        for (let i = 1; i <= 15; i++) {
-            const date = `2025-06-${String(i).padStart(2, '0')}`;
-            let status, clockIn, clockOut, totalHours;
-            const r = Math.random();
-            if (r < 0.8) {
-                status = 'Present';
-                clockIn = '09:0' + Math.floor(Math.random() * 9) + ' AM';
-                clockOut = '06:0' + Math.floor(Math.random() * 9) + ' PM';
-                totalHours = '9h 0m';
-            } else if (r < 0.9) {
-                status = 'WFH';
-                clockIn = '09:1' + Math.floor(Math.random() * 9) + ' AM';
-                clockOut = '06:1' + Math.floor(Math.random() * 9) + ' PM';
-                totalHours = '9h 0m';
-            } else {
-                status = 'Leave';
-                clockIn = '-'; clockOut = '-'; totalHours = '-';
+        
+        function loadTeamTasks() {
+            const container = document.getElementById('team-tasks-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            const filter = document.getElementById('task-filter').value;
+            let tasks = db.getTasks();
+            
+            // Apply filter
+            if (filter !== 'all') {
+                tasks = tasks.filter(task => task.status === filter);
             }
-            attendanceRecords.push({ date, status, clockIn, clockOut, totalHours });
+            
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="text-center p-4 text-muted">No tasks found.</div>`;
+                return;
+            }
+            
+            tasks.forEach(task => {
+                const assignee = db.getEmployees().find(e => e.id == task.assignee) || {};
+                const assigner = db.getEmployees().find(e => e.id == task.assignedBy) || {};
+                const canGiveAppreciation = ['admin', 'manager'].includes(currentUser.role) && task.status === 'completed' && !task.appreciation;
+                
+                container.innerHTML += `
+                    <div class="task-card p-3 mb-3 ${task.status}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">${task.title}</h6>
+                            <span class="task-status-badge task-${task.status}">${task.status}</span>
+                        </div>
+                        <p class="mb-2">${task.description}</p>
+                        <div class="d-flex justify-content-between text-muted small mb-2">
+                            <span><i class="fas fa-user me-1"></i> ${assignee.firstName} ${assignee.lastName}</span>
+                            <span><i class="fas fa-user-tie me-1"></i> ${assigner.firstName || 'Admin'}</span>
+                            <span><i class="fas fa-calendar me-1"></i> ${task.deadline}</span>
+                        </div>
+                        ${canGiveAppreciation ? `
+                        <button class="btn btn-sm btn-warning give-appreciation" data-id="${task.id}">
+                            <i class="fas fa-medal me-1"></i> Give Appreciation
+                        </button>` : ''}
+                        ${task.appreciation ? `
+                        <div class="appreciation-card mt-2 p-2">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="appreciation-badge me-2"><i class="fas fa-star"></i> Appreciation</span>
+                                <small>${task.appreciation.date}</small>
+                            </div>
+                            <p class="mb-0">${task.appreciation.note}</p>
+                        </div>` : ''}
+                    </div>`;
+            });
+            
+            // Add event listeners to appreciation buttons
+            document.querySelectorAll('.give-appreciation').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Switch to appreciations view and pre-fill form
+                    document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
+                    document.querySelector('[data-view="appreciations"]').classList.add('active');
+                    DOMElements.viewContents.forEach(view => view.classList.add('d-none'));
+                    document.getElementById('appreciations-view').classList.remove('d-none');
+                    DOMElements.viewTitle.textContent = "Appreciations";
+                    
+                    // Pre-fill the form
+                    const taskId = btn.dataset.id;
+                    const task = db.getTasks().find(t => t.id == taskId);
+                    if (task) {
+                        document.getElementById('appreciation-task').value = taskId;
+                        document.getElementById('appreciation-employee').value = task.assignee;
+                    }
+                });
+            });
         }
-    }
-
-    function getStatusBadge(status) {
-        const statusMap = {
-            'Approved': 'success',
-            'Pending': 'warning',
-            'Rejected': 'danger',
-            'Present': 'success',
-            'Late': 'warning',
-            'Absent': 'danger',
-            'Leave': 'info',
-            'WFH': 'primary'
-        };
-        const type = statusMap[status] || 'secondary';
-        return `<span class="badge bg-${type}">${status}</span>`;
-    }
-
-    // ** UPDATED: This function now renders the attendance table and updates the clock-in UI state **
-    function loadAttendanceData() {
-        const tableBody = document.getElementById('attendance-table');
-        tableBody.innerHTML = '';
-        if (attendanceRecords.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No attendance data to display.</td></tr>`;
-        } else {
-            // Sort records by date descending
-            const sortedRecords = [...attendanceRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
-            sortedRecords.forEach(rec => {
-                tableBody.innerHTML += `
+        
+        function loadRecentAppreciations() {
+            const container = document.getElementById('recent-appreciations');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            const appreciations = db.getAppreciations().slice(0, 3); // Get 3 most recent
+            
+            if (appreciations.length === 0) {
+                container.innerHTML = `<div class="text-center p-4 text-muted">No appreciations yet.</div>`;
+                return;
+            }
+            
+            appreciations.forEach(app => {
+                const employee = db.getEmployees().find(e => e.id == app.employeeId) || {};
+                const givenBy = db.getEmployees().find(e => e.id == app.givenBy) || {};
+                const task = db.getTasks().find(t => t.id == app.taskId) || {};
+                
+                container.innerHTML += `
+                    <div class="appreciation-card p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="appreciation-badge me-2"><i class="fas fa-star"></i> Appreciation</span>
+                                <small>${app.date}</small>
+                            </div>
+                            <small>${app.public ? 'Public' : 'Private'}</small>
+                        </div>
+                        <p class="mb-1">${app.note}</p>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span><i class="fas fa-user me-1"></i> ${employee.firstName} ${employee.lastName}</span>
+                            <span><i class="fas fa-user-tie me-1"></i> ${givenBy.firstName} ${givenBy.lastName}</span>
+                            <span><i class="fas fa-tasks me-1"></i> ${task.title || 'Task'}</span>
+                        </div>
+                    </div>`;
+            });
+        }
+        
+        function loadTeamAppreciations() {
+            const container = document.getElementById('team-appreciations-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            const filter = document.getElementById('appreciation-filter').value;
+            let appreciations = db.getAppreciations();
+            
+            // Apply filter
+            if (filter === 'public') {
+                appreciations = appreciations.filter(app => app.public);
+            } else if (filter === 'mine') {
+                appreciations = appreciations.filter(app => app.givenBy == currentUser.id);
+            }
+            
+            if (appreciations.length === 0) {
+                container.innerHTML = `<div class="text-center p-4 text-muted">No appreciations found.</div>`;
+                return;
+            }
+            
+            appreciations.forEach(app => {
+                const employee = db.getEmployees().find(e => e.id == app.employeeId) || {};
+                const givenBy = db.getEmployees().find(e => e.id == app.givenBy) || {};
+                const task = db.getTasks().find(t => t.id == app.taskId) || {};
+                
+                container.innerHTML += `
+                    <div class="appreciation-card p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="appreciation-badge me-2"><i class="fas fa-star"></i> Appreciation</span>
+                                <small>${app.date}</small>
+                            </div>
+                            <small>${app.public ? 'Public' : 'Private'}</small>
+                        </div>
+                        <p class="mb-1">${app.note}</p>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span><i class="fas fa-user me-1"></i> ${employee.firstName} ${employee.lastName}</span>
+                            <span><i class="fas fa-user-tie me-1"></i> ${givenBy.firstName} ${givenBy.lastName}</span>
+                            <span><i class="fas fa-tasks me-1"></i> ${task.title || 'Task'}</span>
+                        </div>
+                    </div>`;
+            });
+        }
+        
+        function loadAppreciationFormData() {
+            const employeeSelect = document.getElementById('appreciation-employee');
+            const taskSelect = document.getElementById('appreciation-task');
+            
+            // Clear existing options
+            employeeSelect.innerHTML = '<option value="">Select Employee</option>';
+            taskSelect.innerHTML = '<option value="">Select Task</option>';
+            
+            // Populate employees
+            db.getEmployees().forEach(emp => {
+                if (emp.status === 'active') {
+                    const option = document.createElement('option');
+                    option.value = emp.id;
+                    option.textContent = `${emp.firstName} ${emp.lastName}`;
+                    employeeSelect.appendChild(option);
+                }
+            });
+            
+            // Populate tasks
+            db.getTasks().forEach(task => {
+                if (task.status === 'completed') {
+                    const option = document.createElement('option');
+                    option.value = task.id;
+                    option.textContent = task.title;
+                    taskSelect.appendChild(option);
+                }
+            });
+        }
+        
+        function loadAttendanceRecords() {
+            const table = document.getElementById('attendance-table');
+            table.innerHTML = '';
+            
+            // For demo purposes, we'll show current user's attendance for the selected month
+            const month = parseInt(document.getElementById('attendance-month').value);
+            const year = parseInt(document.getElementById('attendance-year').value);
+            
+            // Generate dates for the selected month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                // Skip weekends for demo
+                if (date.getDay() === 0 || date.getDay() === 6) continue;
+                
+                const dateStr = date.toISOString().split('T')[0];
+                const attendance = db.getAttendance().find(a => 
+                    a.employeeId === currentUser.id && a.date === dateStr
+                ) || {
+                    clockIn: '09:00',
+                    clockOut: '17:00',
+                    status: ['present', 'wfh', 'absent'][Math.floor(Math.random() * 3)]
+                };
+                
+                // Calculate total hours
+                const clockInParts = attendance.clockIn.split(':').map(Number);
+                const clockOutParts = attendance.clockOut.split(':').map(Number);
+                const start = new Date(2000, 0, 1, clockInParts[0], clockInParts[1]);
+                const end = new Date(2000, 0, 1, clockOutParts[0], clockOutParts[1]);
+                const diff = (end - start) / (1000 * 60 * 60); // hours
+                const totalHours = diff.toFixed(1);
+                
+                // Status badge
+                let statusBadge = '';
+                if (attendance.status === 'present') {
+                    statusBadge = '<span class="badge bg-success">Present</span>';
+                } else if (attendance.status === 'wfh') {
+                    statusBadge = '<span class="badge bg-warning">WFH</span>';
+                } else {
+                    statusBadge = '<span class="badge bg-danger">Absent</span>';
+                }
+                
+                table.innerHTML += `
                     <tr>
-                        <td>${rec.date}</td>
-                        <td>${getStatusBadge(rec.status)}</td>
-                        <td>${rec.clockIn || '-'}</td>
-                        <td>${rec.clockOut || '-'}</td>
-                        <td>${rec.totalHours || '-'}</td>
-                    </tr>
-                `;
-            });
-        }
-        
-        // Set the initial state of the clock-in card UI when the view is loaded
-        updateClockUI();
-    }
-
-    function loadLeaveData() {
-        const tableBody = document.getElementById('leave-requests-table');
-        tableBody.innerHTML = '';
-        leaveRequests.forEach(req => {
-            tableBody.innerHTML += `
-                <tr>
-                    <td>${req.startDate} to ${req.endDate}</td>
-                    <td>${req.type.charAt(0).toUpperCase() + req.type.slice(1)}</td>
-                    <td>${getStatusBadge(req.status)}</td>
-                </tr>
-            `;
-        });
-
-        const approvalSection = document.getElementById('leave-approval-section');
-        if (currentUser.role === 'admin' || currentUser.role === 'manager') {
-            approvalSection.classList.remove('d-none');
-            const approvalTable = document.getElementById('leave-approval-table');
-            approvalTable.innerHTML = ''; // Clear previous
-            const otherEmployees = employees.filter(emp => emp.id !== currentUser.id);
-            if(otherEmployees.length > 0) {
-                const emp1 = otherEmployees[0];
-                approvalTable.innerHTML += `
-                <tr>
-                    <td>${emp1.firstName} ${emp1.lastName}</td>
-                    <td>2025-06-20 to 2025-06-22</td>
-                    <td>Vacation</td>
-                    <td>Family event</td>
-                    <td><button class="action-btn btn-approve me-1">Approve</button><button class="action-btn btn-reject">Reject</button></td>
-                </tr>
-                `;
-            } else {
-                approvalTable.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No pending requests.</td></tr>`;
+                        <td>${dateStr}</td>
+                        <td>${attendance.clockIn}</td>
+                        <td>${attendance.clockOut}</td>
+                        <td>${totalHours} hours</td>
+                        <td>${statusBadge}</td>
+                    </tr>`;
             }
-        } else { approvalSection.classList.add('d-none'); }
-    }
-    
-    function loadWFHData() {
-        const tableBody = document.getElementById('wfh-requests-table');
-        tableBody.innerHTML = '';
-        wfhRequests.forEach(req => {
-            tableBody.innerHTML += `
-                <tr>
-                    <td>${req.date}</td>
-                    <td>${req.reason}</td>
-                    <td>${getStatusBadge(req.status)}</td>
-                </tr>
-            `;
-        });
-        // Update stats
-        document.getElementById('wfh-approved').textContent = wfhRequests.filter(r => r.status === 'Approved').length;
-        document.getElementById('wfh-pending').textContent = wfhRequests.filter(r => r.status === 'Pending').length;
-        document.getElementById('wfh-rejected').textContent = wfhRequests.filter(r => r.status === 'Rejected').length;
-
-
-        const approvalSection = document.getElementById('wfh-approval-section');
-         if (currentUser.role === 'admin' || currentUser.role === 'manager') {
-            approvalSection.classList.remove('d-none');
-            const approvalTable = document.getElementById('wfh-approval-table');
-            approvalTable.innerHTML = ''; // Clear previous
-            const otherEmployees = employees.filter(emp => emp.id !== currentUser.id && emp.id !== 'emp001' );
-            if(otherEmployees.length > 0) {
-                const emp1 = otherEmployees[Math.floor(Math.random() * otherEmployees.length)];
-                approvalTable.innerHTML += `
-                <tr>
-                    <td>${emp1.firstName} ${emp1.lastName}</td>
-                    <td>2025-06-18</td>
-                    <td>Package delivery</td>
-                    <td><button class="action-btn btn-approve me-1">Approve</button><button class="action-btn btn-reject">Reject</button></td>
-                </tr>
-                `;
-            } else {
-                 approvalTable.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">No pending requests.</td></tr>`;
+        }
+        
+        function loadLeaveRequests() {
+            const table = document.getElementById('leave-requests-table');
+            table.innerHTML = '';
+            
+            const requests = db.getLeaves().filter(leave => 
+                leave.employeeId === currentUser.id
+            );
+            
+            if (requests.length === 0) {
+                table.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-muted">No leave or WFH requests found.</td></tr>`;
+                return;
             }
-
-        } else { approvalSection.classList.add('d-none'); }
-    }
-
-    function handleLeaveRequest(e) { 
-        e.preventDefault(); 
-        const newRequest = {
-            id: Date.now(),
-            userId: currentUser.id,
-            startDate: document.getElementById('leave-start').value,
-            endDate: document.getElementById('leave-end').value,
-            type: document.getElementById('leave-type').value,
-            reason: document.getElementById('leave-reason').value,
-            status: 'Pending'
-        };
-        leaveRequests.unshift(newRequest); // Add to beginning of array
-        loadLeaveData(); // Refresh view
-        showAlert('Leave request submitted successfully', 'success'); 
-        e.target.reset(); 
-    }
-
-    function handleWFHRequest(e) { 
-        e.preventDefault(); 
-        const newRequest = {
-             id: Date.now(),
-             userId: currentUser.id,
-             date: document.getElementById('wfh-date').value,
-             reason: document.getElementById('wfh-reason').value,
-             status: 'Pending'
-        };
-        wfhRequests.unshift(newRequest); // Add to beginning of array
-        loadWFHData(); // Refresh view
-        showAlert('WFH request submitted successfully', 'success'); 
-        e.target.reset(); 
-    }
-
-    // =================================================================
-    // == EMPLOYEE MANAGEMENT (CRUD)
-    // =================================================================
-    
-    function loadEmployees() {
-        renderEmployeesTable();
-    }
-
-    function renderEmployeesTable() {
-        const tableBody = document.getElementById('employees-table');
-        tableBody.innerHTML = '';
-        
-        if (employees.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">No employees found.</td></tr>';
-            return;
-        }
-        
-        employees.forEach(employee => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${employee.firstName} ${employee.lastName}</td>
-                <td>${employee.email}</td>
-                <td>${formatDepartmentName(employee.department)}</td>
-                <td><span class="badge bg-${getRoleBadgeClass(employee.role)}">${employee.role.charAt(0).toUpperCase() + employee.role.slice(1)}</span></td>
-                <td><span class="badge bg-${employee.status === 'active' ? 'success' : 'secondary'}">${employee.status.charAt(0).toUpperCase() + employee.status.slice(1)}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary me-1 edit-employee" data-id="${employee.id}" title="Edit"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-outline-danger delete-employee" data-id="${employee.id}" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-        
-        document.querySelectorAll('.edit-employee').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const employeeId = e.currentTarget.getAttribute('data-id');
-                const employee = employees.find(emp => emp.id === employeeId);
-                if (employee) openEditEmployeeModal(employee);
+            
+            requests.forEach(req => {
+                let statusBadge = '';
+                if (req.status === 'approved') {
+                    statusBadge = '<span class="badge bg-success">Approved</span>';
+                } else if (req.status === 'rejected') {
+                    statusBadge = '<span class="badge bg-danger">Rejected</span>';
+                } else {
+                    statusBadge = '<span class="badge bg-warning">Pending</span>';
+                }
+                
+                table.innerHTML += `
+                    <tr>
+                        <td>${req.type === 'leave' ? 'Leave' : 'WFH'}</td>
+                        <td>${req.startDate} to ${req.endDate}</td>
+                        <td>${req.reason}</td>
+                        <td>${statusBadge}</td>
+                    </tr>`;
             });
-        });
+        }
         
-        document.querySelectorAll('.delete-employee').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                handleDeleteEmployee(e.currentTarget.getAttribute('data-id'));
+        function loadPendingApprovals() {
+            const table = document.getElementById('pending-approvals-table');
+            table.innerHTML = '';
+            
+            if (!['admin', 'manager'].includes(currentUser.role)) {
+                table.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">Only admins and managers can see pending approvals.</td></tr>`;
+                return;
+            }
+            
+            const requests = db.getLeaves().filter(leave => 
+                leave.status === 'pending'
+            );
+            
+            if (requests.length === 0) {
+                table.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">No pending approvals.</td></tr>`;
+                return;
+            }
+            
+            requests.forEach(req => {
+                const employee = db.getEmployees().find(e => e.id == req.employeeId) || {};
+                
+                table.innerHTML += `
+                    <tr>
+                        <td>${employee.firstName} ${employee.lastName}</td>
+                        <td>${req.type === 'leave' ? 'Leave' : 'WFH'}</td>
+                        <td>${req.startDate} to ${req.endDate}</td>
+                        <td>${req.reason}</td>
+                        <td>
+                            <button class="btn btn-sm btn-success me-1 approve-leave" data-id="${req.id}">Approve</button>
+                            <button class="btn btn-sm btn-danger reject-leave" data-id="${req.id}">Reject</button>
+                        </td>
+                    </tr>`;
             });
-        });
-    }
-    
-    function handleAddEmployee() {
-        const firstName = document.getElementById('employee-first-name').value.trim();
-        const lastName = document.getElementById('employee-last-name').value.trim();
-        const email = document.getElementById('employee-email').value.trim();
-        const department = document.getElementById('employee-department').value;
-        const role = document.getElementById('employee-role').value;
-        const password = document.getElementById('employee-password').value;
-
-        if (!firstName || !lastName || !email || !department || !role || !password) {
-            showAlert('Please fill in all fields', 'danger');
-            return;
-        }
-
-        const newEmployee = {
-            id: 'emp' + Date.now(), // Simple unique ID for demo
-            firstName, lastName, email, password, department, role,
-            joinDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            phone: '', status: 'active'
-        };
-
-        employees.push(newEmployee);
-
-        bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
-        showAlert('Employee added successfully', 'success');
-        
-        refreshAllEmployeeDependentViews();
-    }
-
-    function openEditEmployeeModal(employee) {
-        document.getElementById('edit-employee-id').value = employee.id;
-        document.getElementById('edit-employee-first-name').value = employee.firstName;
-        document.getElementById('edit-employee-last-name').value = employee.lastName;
-        document.getElementById('edit-employee-email').value = employee.email;
-        document.getElementById('edit-employee-department').value = employee.department;
-        document.getElementById('edit-employee-role').value = employee.role;
-        document.getElementById('edit-employee-status').value = employee.status;
-        
-        new bootstrap.Modal(document.getElementById('editEmployeeModal')).show();
-    }
-    
-    function handleUpdateEmployee() {
-        const id = document.getElementById('edit-employee-id').value;
-        const firstName = document.getElementById('edit-employee-first-name').value.trim();
-        const lastName = document.getElementById('edit-employee-last-name').value.trim();
-        const email = document.getElementById('edit-employee-email').value.trim();
-        const department = document.getElementById('edit-employee-department').value;
-        const role = document.getElementById('edit-employee-role').value;
-        const status = document.getElementById('edit-employee-status').value;
-        
-        if (!firstName || !lastName || !email || !department || !role || !status) {
-            showAlert('Please fill in all fields', 'danger');
-            return;
+            
+            // Add event listeners to approval buttons
+            document.querySelectorAll('.approve-leave').forEach(btn => {
+                btn.addEventListener('click', () => updateLeaveStatus(btn.dataset.id, 'approved'));
+            });
+            
+            document.querySelectorAll('.reject-leave').forEach(btn => {
+                btn.addEventListener('click', () => updateLeaveStatus(btn.dataset.id, 'rejected'));
+            });
         }
         
-        const employeeIndex = employees.findIndex(emp => emp.id === id);
+        function loadAnalyticsCharts() {
+            // Attendance Chart
+            const attendanceCtx = document.getElementById('attendance-chart').getContext('2d');
+            new Chart(attendanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                    datasets: [
+                        {
+                            label: 'Present',
+                            data: [22, 24, 23, 25, 24],
+                            backgroundColor: '#10b981',
+                        },
+                        {
+                            label: 'WFH',
+                            data: [3, 2, 4, 3, 4],
+                            backgroundColor: '#f59e0b',
+                        },
+                        {
+                            label: 'Absent',
+                            data: [1, 0, 0, 0, 2],
+                            backgroundColor: '#ef4444',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+            
+            // Tasks Chart
+            const tasksCtx = document.getElementById('tasks-chart').getContext('2d');
+            const tasks = db.getTasks();
+            const completed = tasks.filter(t => t.status === 'completed').length;
+            const assigned = tasks.filter(t => t.status === 'assigned').length;
+            const missed = tasks.filter(t => t.status === 'missed').length;
+            
+            new Chart(tasksCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Assigned', 'Missed'],
+                    datasets: [{
+                        data: [completed, assigned, missed],
+                        backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+            
+            // Leave Chart
+            const leaveCtx = document.getElementById('leave-chart').getContext('2d');
+            const leaves = db.getLeaves();
+            const approved = leaves.filter(l => l.status === 'approved').length;
+            const pending = leaves.filter(l => l.status === 'pending').length;
+            const rejected = leaves.filter(l => l.status === 'rejected').length;
+            
+            new Chart(leaveCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Approved', 'Pending', 'Rejected'],
+                    datasets: [{
+                        data: [approved, pending, rejected],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+            
+            // Performance Chart
+            const performanceCtx = document.getElementById('performance-chart').getContext('2d');
+            new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Performance Score',
+                        data: [75, 82, 78, 85, 88, 90, 92],
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            min: 50,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
         
-        if (employeeIndex !== -1) {
-            employees[employeeIndex] = {
-                ...employees[employeeIndex],
-                firstName, lastName, email, department, role, status
+        function loadProfileData() {
+            if (!currentUser) return;
+            
+            document.getElementById('profile-first-name').value = currentUser.firstName;
+            document.getElementById('profile-last-name').value = currentUser.lastName;
+            document.getElementById('profile-email').value = currentUser.email;
+            document.getElementById('profile-phone').value = currentUser.phone || '';
+            document.getElementById('profile-department').value = currentUser.department;
+            document.getElementById('profile-dob').value = currentUser.dob || '';
+            document.getElementById('profile-address').value = currentUser.address || '';
+        }
+        
+        // =================================================================
+        // == TASK MANAGEMENT
+        // =================================================================
+        function openTaskModal() {
+            DOMElements.taskForm.reset();
+            document.getElementById('task-id').value = '';
+            document.getElementById('taskModalTitle').textContent = 'Create New Task';
+            
+            // Populate assignee dropdown
+            const assigneeSelect = document.getElementById('task-assignee');
+            assigneeSelect.innerHTML = '<option value="">Select Employee</option>';
+            db.getEmployees().forEach(emp => {
+                if (emp.status === 'active' && emp.id !== currentUser.id) {
+                    const option = document.createElement('option');
+                    option.value = emp.id;
+                    option.textContent = `${emp.firstName} ${emp.lastName}`;
+                    assigneeSelect.appendChild(option);
+                }
+            });
+            
+            // Set default deadline to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('task-deadline').value = tomorrow.toISOString().split('T')[0];
+            
+            taskModal.show();
+        }
+        
+        function handleSaveTask() {
+            const id = document.getElementById('task-id').value;
+            let tasks = db.getTasks();
+            
+            const taskData = {
+                title: document.getElementById('task-title').value,
+                description: document.getElementById('task-description').value,
+                assignee: parseInt(document.getElementById('task-assignee').value),
+                assignedBy: currentUser.id,
+                deadline: document.getElementById('task-deadline').value,
+                priority: document.getElementById('task-priority').value,
+                status: "assigned"
             };
             
-            if (currentUser.id === id) {
-                currentUser = { ...employees[employeeIndex] };
-                updateUIForUserRole();
+            if (id) {
+                // Update existing task
+                const index = tasks.findIndex(t => t.id == id);
+                if (index > -1) {
+                    tasks[index] = { ...tasks[index], ...taskData };
+                    showAlert('Task updated successfully.', 'success');
+                }
+            } else {
+                // Create new task
+                const newTask = {
+                    id: Date.now(), // simple unique ID
+                    ...taskData
+                };
+                tasks.push(newTask);
+                showAlert('Task created successfully.', 'success');
             }
-
-            bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal')).hide();
-            showAlert('Employee updated successfully', 'success');
-
-            refreshAllEmployeeDependentViews();
-        }
-    }
-    
-    function handleDeleteEmployee(employeeId) {
-        if (employeeId === currentUser.id) {
-            showAlert("You cannot delete your own account.", "danger");
-            return;
-        }
-        if (confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
-            employees = employees.filter(emp => emp.id !== employeeId);
-            showAlert('Employee deleted successfully', 'success');
             
-            refreshAllEmployeeDependentViews();
-        }
-    }
-
-    // =================================================================
-    // == DASHBOARD AND OTHER VIEWS
-    // =================================================================
-    
-    function getRoleBadgeClass(role) {
-        switch(role) {
-            case 'admin': return 'danger';
-            case 'manager': return 'warning';
-            case 'employee': return 'primary';
-            default: return 'secondary';
-        }
-    }
-    
-    function loadNotifications() {
-        document.getElementById('notification-count').textContent = notifications.filter(n => !n.read).length;
-        const dropdown = document.getElementById('notification-dropdown');
-        dropdown.innerHTML = '';
-        
-        if (notifications.length === 0) {
-            dropdown.innerHTML = '<div class="dropdown-item text-center py-3">No new notifications</div>';
-            return;
+            db.saveTasks(tasks);
+            taskModal.hide();
+            loadUserTasks();
+            loadTeamTasks();
         }
         
-        notifications.forEach(notification => {
-            const item = document.createElement('a');
-            item.className = `dropdown-item ${notification.read ? '' : 'fw-bold'}`;
-            item.href = '#';
-            item.innerHTML = `<div class="d-flex align-items-center"><i class="fas ${getNotificationIcon(notification.type)} me-2"></i><div><div>${notification.message}</div><small class="text-muted">${notification.date}</small></div></div>`;
-            dropdown.appendChild(item);
-        });
+        function markTaskComplete(taskId) {
+            const tasks = db.getTasks();
+            const taskIndex = tasks.findIndex(t => t.id == taskId);
+            
+            if (taskIndex > -1) {
+                tasks[taskIndex].status = "completed";
+                tasks[taskIndex].completedOn = new Date().toISOString().split('T')[0];
+                db.saveTasks(tasks);
+                showAlert('Task marked as completed!', 'success');
+                loadUserTasks();
+                loadTeamTasks();
+            }
+        }
         
-        dropdown.insertAdjacentHTML('beforeend', '<div class="dropdown-divider"></div><a href="#" id="mark-all-read" class="dropdown-item text-center small">Mark all as read</a>');
-        document.getElementById('mark-all-read').addEventListener('click', markAllNotificationsAsRead);
-    }
-    
-    function getNotificationIcon(type) {
-        switch(type) {
-            case 'leave': return 'fa-umbrella-beach';
-            case 'wfh': return 'fa-laptop-house';
-            case 'attendance': return 'fa-calendar-check';
-            default: return 'fa-bell';
-        }
-    }
-    
-    function markAllNotificationsAsRead(e) {
-        e.preventDefault();
-        notifications.forEach(n => n.read = true);
-        loadNotifications();
-    }
-    
-    function updateDashboardStats() {
-        document.getElementById('total-employees').textContent = employees.length;
-        document.getElementById('present-today').textContent = Math.floor(employees.length * 0.85); // Dummy data
-        document.getElementById('on-leave').textContent = Math.floor(employees.length * 0.1); // Dummy data
-        document.getElementById('wfh-today').textContent = Math.floor(employees.length * 0.05); // Dummy data
-        if (document.getElementById('sys-total-employees')) {
-            document.getElementById('sys-total-employees').textContent = employees.length;
-        }
-    }
-
-    function loadDashboardStats() {
-        updateDashboardStats();
-    }
-    
-    function loadEmployeeStatus() {
-        const container = document.getElementById('employee-status-container');
-        container.innerHTML = '';
-        let employeesToShow = (currentUser.role === 'admin') ? employees :
-                              (currentUser.role === 'manager') ? employees.filter(e => e.department === currentUser.department && e.role !== 'admin') :
-                              employees.filter(e => e.id === currentUser.id);
-        
-        employeesToShow.forEach(employee => {
-            const status = getRandomStatus();
-            const card = document.createElement('div');
-            card.className = 'employee-card';
-            card.innerHTML = `<div class="employee-avatar bg-primary">${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}</div><div class="employee-info"><h6 class="mb-0">${employee.firstName} ${employee.lastName}</h6><small class="text-muted">${formatDepartmentName(employee.department)}</small></div><span class="status-badge bg-${getStatusBadgeClass(status)}">${status}</span>`;
-            container.appendChild(card);
-        });
-    }
-    
-    function getRandomStatus() {
-        const statuses = ['Present', 'Present', 'Present', 'Absent', 'On Leave', 'WFH'];
-        return statuses[Math.floor(Math.random() * statuses.length)];
-    }
-    
-    function getStatusBadgeClass(status) {
-        switch(status) {
-            case 'Present': return 'success';
-            case 'Absent': return 'danger';
-            case 'On Leave': return 'primary';
-            case 'WFH': return 'warning';
-            default: return 'secondary';
-        }
-    }
-    
-    function loadPendingApprovals() {
-        const container = document.getElementById('pending-approvals-container');
-        container.innerHTML = '<div class="text-center py-4 text-muted">No pending approvals</div>';
-    }
-    
-    function filterEmployeesByDepartment() {
-        loadEmployeeStatus(); // This is just a dummy function for now
-    }
-    
-    // ** NEW: Helper function to update the clock-in UI elements **
-    function updateClockUI() {
-        const clockBtn = document.getElementById('clock-btn');
-        const clockAction = document.getElementById('clock-action');
-        const clockStatusEl = document.getElementById('clock-status');
-        const clockMessageEl = document.getElementById('clock-message');
-
-        if (sessionClockStatus.clockedOutForDay) {
-            // User has completed their day
-            clockBtn.disabled = true;
-            clockBtn.classList.remove('btn-primary', 'btn-danger');
-            clockBtn.classList.add('btn-secondary');
-            clockAction.textContent = 'Day Ended';
-            clockStatusEl.innerHTML = `<i class="fas fa-check-circle text-success me-2"></i>You have clocked out for the day.`;
-            clockMessageEl.textContent = 'Your attendance has been recorded.';
-        } else if (sessionClockStatus.clockedIn) {
-            // User is currently clocked in
-            clockBtn.disabled = false;
-            clockBtn.classList.remove('btn-primary', 'btn-secondary');
-            clockBtn.classList.add('btn-danger');
-            clockAction.textContent = 'Clock Out';
-            const timeString = sessionClockStatus.clockInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            clockStatusEl.innerHTML = `<i class="fas fa-hourglass-start text-primary me-2"></i>You are currently clocked in.`;
-            clockMessageEl.textContent = `Clocked in at ${timeString}.`;
-        } else {
-            // User is ready to clock in
-            clockBtn.disabled = false;
-            clockBtn.classList.remove('btn-danger', 'btn-secondary');
-            clockBtn.classList.add('btn-primary');
-            clockAction.textContent = 'Clock In';
-            clockStatusEl.innerHTML = `<i class="fas fa-sign-out-alt text-muted me-2"></i>You are currently clocked out.`;
-            clockMessageEl.textContent = 'Click the button to start your work day.';
-        }
-    }
-    
-    // ** UPDATED: This function now handles the full clock-in/out logic **
-    function handleClockInOut() {
-        if (sessionClockStatus.clockedOutForDay) return; // Button should be disabled, but this is a safeguard
-
-        if (!sessionClockStatus.clockedIn) {
-            // === CLOCKING IN ===
-            sessionClockStatus.clockedIn = true;
-            sessionClockStatus.clockInTime = new Date();
+        // =================================================================
+        // == APPRECIATION MANAGEMENT
+        // =================================================================
+        function handleSaveAppreciation(e) {
+            e.preventDefault();
             
-            showAlert('You have successfully clocked in!', 'success');
-        } else {
-            // === CLOCKING OUT ===
-            const clockOutTime = new Date();
-            const durationMs = clockOutTime - sessionClockStatus.clockInTime;
+            const appreciationData = {
+                employeeId: parseInt(document.getElementById('appreciation-employee').value),
+                taskId: parseInt(document.getElementById('appreciation-task').value),
+                note: document.getElementById('appreciation-note').value,
+                givenBy: currentUser.id,
+                date: new Date().toISOString().split('T')[0],
+                public: document.getElementById('appreciation-public').checked
+            };
             
-            // Calculate total hours and minutes
-            let totalMinutes = Math.floor(durationMs / 60000);
-            let hours = Math.floor(totalMinutes / 60);
-            let minutes = totalMinutes % 60;
-            const totalHours = `${hours}h ${minutes}m`;
+            // Add appreciation to task
+            const tasks = db.getTasks();
+            const taskIndex = tasks.findIndex(t => t.id == appreciationData.taskId);
+            if (taskIndex > -1) {
+                tasks[taskIndex].appreciation = {
+                    note: appreciationData.note,
+                    givenBy: appreciationData.givenBy,
+                    date: appreciationData.date,
+                    public: appreciationData.public
+                };
+                db.saveTasks(tasks);
+            }
             
-            // Update the state to reflect that the day is over
-            sessionClockStatus.clockedIn = false;
-            sessionClockStatus.clockedOutForDay = true;
-            
-            showAlert(`Clocked out. Total work time: ${totalHours}.`, 'info');
-
-            // Update the mock attendanceRecords array for today's entry
-            const todayString = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
-            const clockInString = sessionClockStatus.clockInTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            const clockOutString = clockOutTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-            // In a real app, you'd save this to a database. Here, we add it to our mock data.
-            attendanceRecords.push({
-                date: todayString,
-                status: 'Present',
-                clockIn: clockInString,
-                clockOut: clockOutString,
-                totalHours: totalHours
+            // Save to appreciations list
+            const appreciations = db.getAppreciations();
+            appreciations.push({
+                id: Date.now(),
+                ...appreciationData
             });
-            // Refresh the attendance table to show the new record immediately
-            loadAttendanceData();
-        }
-
-        // Update the UI based on the new state
-        updateClockUI();
-    }
-    
-    function loadProfileData() {
-        if (!currentUser) return;
-        document.getElementById('profile-initials').textContent = `${currentUser.firstName.charAt(0)}${currentUser.lastName.charAt(0)}`;
-        document.getElementById('profile-name').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-        document.getElementById('profile-role').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
-        document.getElementById('profile-email').textContent = currentUser.email;
-        document.getElementById('profile-phone').textContent = currentUser.phone || 'Not provided';
-        document.getElementById('profile-department').textContent = formatDepartmentName(currentUser.department);
-        document.getElementById('profile-join-date').textContent = currentUser.joinDate;
-        document.getElementById('profile-first-name').value = currentUser.firstName;
-        document.getElementById('profile-last-name').value = currentUser.lastName;
-        document.getElementById('profile-email-input').value = currentUser.email;
-        document.getElementById('profile-phone-input').value = currentUser.phone || '';
-        document.getElementById('profile-department-select').value = currentUser.department;
-    }
-    function handleProfileUpdate(e) { e.preventDefault(); showAlert('Profile updated successfully (demo)', 'success'); }
-    function handlePasswordChange(e) { e.preventDefault(); showAlert('Password changed successfully (demo)', 'success'); e.target.reset(); }
-    function handleSystemSettings(e) { e.preventDefault(); showAlert('System settings saved successfully (demo)', 'success'); }
-    function handleExportData() { showAlert('Employee data exported successfully (demo)', 'success'); }
-    function handleBackupData() { showAlert('System backup created successfully (demo)', 'success'); }
-    function handleResetData() {
-        if (confirm('Are you sure you want to reset all test data? This will revert all changes made during this session.')) {
-            initializeSessionData(); 
+            db.saveAppreciations(appreciations);
             
-            refreshAllEmployeeDependentViews();
-            
-            showAlert('Test data has been reset.', 'success');
+            showAlert('Appreciation submitted successfully!', 'success');
+            DOMElements.appreciationForm.reset();
+            loadTeamAppreciations();
+            loadRecentAppreciations();
+            loadUserTasks();
         }
-    }
-
-    // =================================================================
-    // == UTILITY FUNCTIONS
-    // =================================================================
-    
-    function showLoading() { loadingSpinner.classList.remove('d-none'); }
-    function hideLoading() { loadingSpinner.classList.add('d-none'); }
-    function showAlert(message, type) {
-        const alertContainer = document.querySelector('.main-content');
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show m-3 position-fixed top-0 end-0`;
-        alert.style.zIndex = "1050";
-        alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-        alertContainer.appendChild(alert);
-        setTimeout(() => {
-            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-            if (bsAlert) bsAlert.close();
-        }, 5000);
-    }
-    
-    document.addEventListener('DOMContentLoaded', initApp);
-</script>
-
+        
+        // =================================================================
+        // == LEAVE & WFH MANAGEMENT
+        // =================================================================
+        function handleSaveLeave(e) {
+            e.preventDefault();
+            
+            const leaveData = {
+                employeeId: currentUser.id,
+                type: document.getElementById('leave-type').value,
+                startDate: document.getElementById('leave-start').value,
+                endDate: document.getElementById('leave-end').value,
+                reason: document.getElementById('leave-reason').value,
+                status: "pending"
+            };
+            
+            const leaves = db.getLeaves();
+            leaves.push({
+                id: Date.now(),
+                ...leaveData
+            });
+            db.saveLeaves(leaves);
+            
+            showAlert('Request submitted successfully!', 'success');
+            DOMElements.leaveForm.reset();
+            loadLeaveRequests();
+            loadPendingApprovals();
+        }
+        
+        function updateLeaveStatus(leaveId, status) {
+            const leaves = db.getLeaves();
+            const leaveIndex = leaves.findIndex(l => l.id == leaveId);
+            
+            if (leaveIndex > -1) {
+                leaves[leaveIndex].status = status;
+                db.saveLeaves(leaves);
+                showAlert(`Request ${status}!`, 'success');
+                loadLeaveRequests();
+                loadPendingApprovals();
+            }
+        }
+        
+        // =================================================================
+        // == PROFILE & PASSWORD
+        // =================================================================
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            
+            const profileData = {
+                firstName: document.getElementById('profile-first-name').value,
+                lastName: document.getElementById('profile-last-name').value,
+                email: document.getElementById('profile-email').value,
+                phone: document.getElementById('profile-phone').value,
+                department: document.getElementById('profile-department').value,
+                dob: document.getElementById('profile-dob').value,
+                address: document.getElementById('profile-address').value
+            };
+            
+            // Update current user
+            const employees = db.getEmployees();
+            const employeeIndex = employees.findIndex(e => e.id == currentUser.id);
+            
+            if (employeeIndex > -1) {
+                employees[employeeIndex] = { ...employees[employeeIndex], ...profileData };
+                db.saveEmployees(employees);
+                
+                // Update session
+                currentUser = employees[employeeIndex];
+                db.setCurrentUser(currentUser);
+                updateUIForUserRole();
+                
+                showAlert('Profile updated successfully!', 'success');
+            }
+        }
+        
+        function handleChangePassword(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (currentPassword !== currentUser.password) {
+                showAlert('Current password is incorrect.', 'danger');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showAlert('New passwords do not match.', 'danger');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showAlert('Password must be at least 6 characters long.', 'danger');
+                return;
+            }
+            
+            // Update password
+            const employees = db.getEmployees();
+            const employeeIndex = employees.findIndex(e => e.id == currentUser.id);
+            
+            if (employeeIndex > -1) {
+                employees[employeeIndex].password = newPassword;
+                db.saveEmployees(employees);
+                
+                // Update session
+                currentUser.password = newPassword;
+                db.setCurrentUser(currentUser);
+                
+                showAlert('Password changed successfully!', 'success');
+                DOMElements.passwordForm.reset();
+            }
+        }
+        
+        // =================================================================
+        // == ATTENDANCE CLOCK
+        // =================================================================
+        function toggleClock() {
+            if (!clockedIn) {
+                // Clock in
+                clockedIn = true;
+                clockInTime = new Date();
+                DOMElements.clockBtn.textContent = "Clock Out";
+                DOMElements.clockBtn.classList.add("clocked-in");
+                showAlert("Clocked in successfully!", "success");
+            } else {
+                // Clock out
+                clockedIn = false;
+                const clockOutTime = new Date();
+                const hoursWorked = ((clockOutTime - clockInTime) / (1000 * 60 * 60)).toFixed(1);
+                
+                // Save attendance record
+                const attendance = db.getAttendance();
+                attendance.push({
+                    employeeId: currentUser.id,
+                    date: new Date().toISOString().split('T')[0],
+                    clockIn: clockInTime.toTimeString().substring(0, 5),
+                    clockOut: clockOutTime.toTimeString().substring(0, 5),
+                    status: "present"
+                });
+                db.saveAttendance(attendance);
+                
+                DOMElements.clockBtn.textContent = "Clock In";
+                DOMElements.clockBtn.classList.remove("clocked-in");
+                showAlert(`Clocked out. You worked ${hoursWorked} hours today.`, "success");
+            }
+        }
+        
+        // =================================================================
+        // == UTILITY FUNCTIONS
+        // =================================================================
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            alertContainer.appendChild(alert);
+            new bootstrap.Alert(alert);
+            setTimeout(() => {
+                const alertInstance = bootstrap.Alert.getOrCreateInstance(alert);
+                if (alertInstance) alertInstance.close();
+            }, 5000);
+        }
+        
+        function openEmployeeModalForAdd() {
+            DOMElements.employeeForm.reset();
+            document.getElementById('employee-id').value = '';
+            document.getElementById('employeeModalTitle').textContent = 'Add New Employee';
+            document.getElementById('status-field-group').classList.add('d-none');
+            document.getElementById('password-field-group').classList.remove('d-none');
+            employeeModal.show();
+        }
+        
+        function handleSaveEmployee() {
+            const id = document.getElementById('employee-id').value;
+            let employees = db.getEmployees();
+            
+            const employeeData = {
+                firstName: document.getElementById('employee-first-name').value,
+                lastName: document.getElementById('employee-last-name').value,
+                email: document.getElementById('employee-email').value,
+                password: document.getElementById('employee-password').value,
+                department: document.getElementById('employee-department').value,
+                role: document.getElementById('employee-role').value,
+                status: document.getElementById('employee-status').value || 'active',
+                joinDate: new Date().toISOString()
+            };
+            
+            if (id) {
+                // Update existing employee
+                const index = employees.findIndex(e => e.id == id);
+                if (index > -1) {
+                    employees[index] = { ...employees[index], ...employeeData };
+                    showAlert('Employee updated successfully.', 'success');
+                }
+            } else {
+                // Create new employee
+                const newEmployee = {
+                    id: Date.now(), // simple unique ID
+                    ...employeeData
+                };
+                employees.push(newEmployee);
+                showAlert('Employee created successfully.', 'success');
+            }
+            
+            db.saveEmployees(employees);
+            employeeModal.hide();
+            loadEmployees();
+        }
+        
+        function loadEmployees() {
+            const table = document.getElementById('employees-table');
+            table.innerHTML = '';
+            
+            const employees = db.getEmployees();
+            
+            if (employees.length === 0) {
+                table.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">No employees found.</td></tr>`;
+                return;
+            }
+            
+            employees.forEach(emp => {
+                let statusBadge = '';
+                if (emp.status === 'active') {
+                    statusBadge = '<span class="badge bg-success">Active</span>';
+                } else {
+                    statusBadge = '<span class="badge bg-danger">Inactive</span>';
+                }
+                
+                let roleBadge = '';
+                if (emp.role === 'admin') {
+                    roleBadge = '<span class="badge role-admin">Admin</span>';
+                } else if (emp.role === 'manager') {
+                    roleBadge = '<span class="badge role-manager">Manager</span>';
+                } else {
+                    roleBadge = '<span class="badge role-employee">Employee</span>';
+                }
+                
+                table.innerHTML += `
+                    <tr>
+                        <td>${emp.firstName} ${emp.lastName}</td>
+                        <td>${emp.email}</td>
+                        <td>${emp.department.replace('-', ' ')}</td>
+                        <td>${roleBadge}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary edit-employee" data-id="${emp.id}">Edit</button>
+                        </td>
+                    </tr>`;
+            });
+            
+            // Add event listeners to edit buttons
+            document.querySelectorAll('.edit-employee').forEach(btn => {
+                btn.addEventListener('click', () => openEmployeeModalForEdit(btn.dataset.id));
+            });
+        }
+        
+        function openEmployeeModalForEdit(employeeId) {
+            const employee = db.getEmployees().find(e => e.id == employeeId);
+            if (!employee) return;
+            
+            document.getElementById('employee-id').value = employee.id;
+            document.getElementById('employee-first-name').value = employee.firstName;
+            document.getElementById('employee-last-name').value = employee.lastName;
+            document.getElementById('employee-email').value = employee.email;
+            document.getElementById('employee-department').value = employee.department;
+            document.getElementById('employee-role').value = employee.role;
+            document.getElementById('employee-status').value = employee.status;
+            document.getElementById('employee-password').value = employee.password;
+            
+            document.getElementById('employeeModalTitle').textContent = 'Edit Employee';
+            document.getElementById('status-field-group').classList.remove('d-none');
+            document.getElementById('password-field-group').classList.add('d-none');
+            
+            employeeModal.show();
+        }
+    </script>
 </body>
 </html>
