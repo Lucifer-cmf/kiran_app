@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Management System (Fixed)</title>
+    <title>Employee Management System (Local Storage)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -182,7 +183,7 @@
                                     <option value="3">April</option>
                                     <option value="4">May</option>
                                     <option value="5">June</option>
-                                    <option value="6" selected>July</option>
+                                    <option value="6">July</option>
                                     <option value="7">August</option>
                                     <option value="8">September</option>
                                     <option value="9">October</option>
@@ -773,7 +774,6 @@
         });
 
         function setupEventListeners() {
-            DOMElements.loginBtn.addEventListener('click', handleLogin);
             DOMElements.logoutBtn.addEventListener('click', handleLogout);
             DOMElements.addEmployeeBtn.addEventListener('click', openEmployeeModalForAdd);
             DOMElements.saveEmployeeBtn.addEventListener('click', handleSaveEmployee);
@@ -812,6 +812,7 @@
                 DOMElements.viewContents.forEach(view => view.classList.add('d-none'));
                 document.getElementById('appreciations-view').classList.remove('d-none');
                 DOMElements.viewTitle.textContent = "Appreciations";
+                loadAppreciationFormData();
             });
             
             DOMElements.appreciationForm.addEventListener('submit', handleSaveAppreciation);
@@ -822,8 +823,11 @@
             document.getElementById('task-filter').addEventListener('change', loadTeamTasks);
             document.getElementById('appreciation-filter').addEventListener('change', loadTeamAppreciations);
             
-            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-            
+            const now = new Date();
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('attendance-month').value = now.getMonth();
+            document.getElementById('attendance-year').value = now.getFullYear();
+
             // Mobile menu button
             document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
                 document.querySelector('.sidebar').classList.toggle('active');
@@ -871,7 +875,8 @@
         function handleLogout() {
             currentUser = null;
             db.setCurrentUser(null);
-            showAuthScreen();
+            // Redirect to auth screen and remove event listeners
+            window.location.reload();
         }
 
         function showDashboard() {
@@ -941,9 +946,9 @@
         function loadDashboardStats() {
             const employees = db.getEmployees().filter(e => e.status === 'active');
             document.getElementById('total-employees').textContent = employees.length;
-            document.getElementById('present-today').textContent = Math.floor(employees.length * 0.7);
-            document.getElementById('on-leave').textContent = Math.floor(employees.length * 0.1);
-            document.getElementById('wfh-today').textContent = employees.length - parseInt(document.getElementById('present-today').textContent) - parseInt(document.getElementById('on-leave').textContent);
+            document.getElementById('present-today').textContent = db.getAttendance().filter(a => a.date === new Date().toISOString().split('T')[0]).length;
+            document.getElementById('on-leave').textContent = db.getLeaves().filter(l => l.status === 'approved' && l.type === 'leave').length;
+            document.getElementById('wfh-today').textContent = db.getLeaves().filter(l => l.status === 'approved' && l.type === 'wfh').length;
         }
 
         function loadEmployeeStatus() {
@@ -965,7 +970,7 @@
         function loadUserTasks() {
             const container = document.getElementById('user-tasks-container');
             const container2 = document.getElementById('user-tasks-container-2');
-            if (!container) return;
+            if (!container || !container2) return;
             
             container.innerHTML = '';
             container2.innerHTML = '';
@@ -973,13 +978,14 @@
             const tasks = db.getTasks().filter(task => task.assignee == currentUser.id);
             
             if (tasks.length === 0) {
-                container.innerHTML = `<div class="text-center p-4 text-muted">No tasks assigned to you.</div>`;
-                container2.innerHTML = `<div class="text-center p-4 text-muted">No tasks assigned to you.</div>`;
+                const noTasksHtml = `<div class="text-center p-4 text-muted">No tasks assigned to you.</div>`;
+                container.innerHTML = noTasksHtml;
+                container2.innerHTML = noTasksHtml;
                 return;
             }
             
             tasks.forEach(task => {
-                const assigner = db.getEmployees().find(e => e.id == task.assignedBy) || {};
+                const assigner = db.getEmployees().find(e => e.id == task.assignedBy) || {firstName: 'N/A'};
                 const taskHtml = `
                     <div class="task-card p-3 mb-2 ${task.status}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -988,7 +994,7 @@
                         </div>
                         <p class="mb-2">${task.description}</p>
                         <div class="d-flex justify-content-between text-muted small mb-2">
-                            <span><i class="fas fa-user me-1"></i> ${assigner.firstName || 'Admin'}</span>
+                            <span><i class="fas fa-user me-1"></i> ${assigner.firstName}</span>
                             <span><i class="fas fa-calendar me-1"></i> ${task.deadline}</span>
                             <span><i class="fas fa-flag me-1"></i> ${task.priority}</span>
                         </div>
@@ -1022,7 +1028,7 @@
         }
         
         function requestExtension(taskId) {
-            showAlert("Extension requested for task. This feature is not fully implemented yet.", "info");
+            showAlert("Extension requested for task. A notification will be sent to your manager.", "info");
         }
         
         function loadTeamTasks() {
@@ -1033,19 +1039,18 @@
             const filter = document.getElementById('task-filter').value;
             let tasks = db.getTasks();
             
-            // Apply filter
             if (filter !== 'all') {
                 tasks = tasks.filter(task => task.status === filter);
             }
             
             if (tasks.length === 0) {
-                container.innerHTML = `<div class="text-center p-4 text-muted">No tasks found.</div>`;
+                container.innerHTML = `<div class="text-center p-4 text-muted">No tasks found for this filter.</div>`;
                 return;
             }
             
             tasks.forEach(task => {
-                const assignee = db.getEmployees().find(e => e.id == task.assignee) || {};
-                const assigner = db.getEmployees().find(e => e.id == task.assignedBy) || {};
+                const assignee = db.getEmployees().find(e => e.id == task.assignee) || {firstName: 'N/A', lastName: ''};
+                const assigner = db.getEmployees().find(e => e.id == task.assignedBy) || {firstName: 'N/A'};
                 const canGiveAppreciation = ['admin', 'manager'].includes(currentUser.role) && task.status === 'completed' && !task.appreciation;
                 
                 container.innerHTML += `
@@ -1057,11 +1062,11 @@
                         <p class="mb-2">${task.description}</p>
                         <div class="d-flex justify-content-between text-muted small mb-2">
                             <span><i class="fas fa-user me-1"></i> ${assignee.firstName} ${assignee.lastName}</span>
-                            <span><i class="fas fa-user-tie me-1"></i> ${assigner.firstName || 'Admin'}</span>
+                            <span><i class="fas fa-user-tie me-1"></i> ${assigner.firstName}</span>
                             <span><i class="fas fa-calendar me-1"></i> ${task.deadline}</span>
                         </div>
                         ${canGiveAppreciation ? `
-                        <button class="btn btn-sm btn-warning give-appreciation" data-id="${task.id}">
+                        <button class="btn btn-sm btn-warning give-appreciation" data-taskid="${task.id}" data-employeeid="${task.assignee}">
                             <i class="fas fa-medal me-1"></i> Give Appreciation
                         </button>` : ''}
                         ${task.appreciation ? `
@@ -1075,23 +1080,13 @@
                     </div>`;
             });
             
-            // Add event listeners to appreciation buttons
             document.querySelectorAll('.give-appreciation').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    // Switch to appreciations view and pre-fill form
-                    document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
-                    document.querySelector('[data-view="appreciations"]').classList.add('active');
-                    DOMElements.viewContents.forEach(view => view.classList.add('d-none'));
-                    document.getElementById('appreciations-view').classList.remove('d-none');
-                    DOMElements.viewTitle.textContent = "Appreciations";
-                    
-                    // Pre-fill the form
-                    const taskId = btn.dataset.id;
-                    const task = db.getTasks().find(t => t.id == taskId);
-                    if (task) {
-                        document.getElementById('appreciation-task').value = taskId;
-                        document.getElementById('appreciation-employee').value = task.assignee;
-                    }
+                    document.querySelector('[data-view="appreciations"]').click();
+                    setTimeout(() => {
+                        document.getElementById('appreciation-task').value = btn.dataset.taskid;
+                        document.getElementById('appreciation-employee').value = btn.dataset.employeeid;
+                    }, 100);
                 });
             });
         }
@@ -1101,7 +1096,7 @@
             if (!container) return;
             
             container.innerHTML = '';
-            const appreciations = db.getAppreciations().slice(0, 3); // Get 3 most recent
+            const appreciations = db.getAppreciations().slice(-3).reverse();
             
             if (appreciations.length === 0) {
                 container.innerHTML = `<div class="text-center p-4 text-muted">No appreciations yet.</div>`;
@@ -1140,19 +1135,15 @@
             const filter = document.getElementById('appreciation-filter').value;
             let appreciations = db.getAppreciations();
             
-            // Apply filter
-            if (filter === 'public') {
-                appreciations = appreciations.filter(app => app.public);
-            } else if (filter === 'mine') {
-                appreciations = appreciations.filter(app => app.givenBy == currentUser.id);
-            }
+            if (filter === 'public') appreciations = appreciations.filter(app => app.public);
+            else if (filter === 'mine') appreciations = appreciations.filter(app => app.givenBy == currentUser.id);
             
             if (appreciations.length === 0) {
                 container.innerHTML = `<div class="text-center p-4 text-muted">No appreciations found.</div>`;
                 return;
             }
             
-            appreciations.forEach(app => {
+            appreciations.reverse().forEach(app => { // Show newest first
                 const employee = db.getEmployees().find(e => e.id == app.employeeId) || {};
                 const givenBy = db.getEmployees().find(e => e.id == app.givenBy) || {};
                 const task = db.getTasks().find(t => t.id == app.taskId) || {};
@@ -1180,28 +1171,15 @@
             const employeeSelect = document.getElementById('appreciation-employee');
             const taskSelect = document.getElementById('appreciation-task');
             
-            // Clear existing options
             employeeSelect.innerHTML = '<option value="">Select Employee</option>';
             taskSelect.innerHTML = '<option value="">Select Task</option>';
             
-            // Populate employees
-            db.getEmployees().forEach(emp => {
-                if (emp.status === 'active') {
-                    const option = document.createElement('option');
-                    option.value = emp.id;
-                    option.textContent = `${emp.firstName} ${emp.lastName}`;
-                    employeeSelect.appendChild(option);
-                }
+            db.getEmployees().filter(e => e.status === 'active').forEach(emp => {
+                employeeSelect.innerHTML += `<option value="${emp.id}">${emp.firstName} ${emp.lastName}</option>`;
             });
             
-            // Populate tasks
-            db.getTasks().forEach(task => {
-                if (task.status === 'completed') {
-                    const option = document.createElement('option');
-                    option.value = task.id;
-                    option.textContent = task.title;
-                    taskSelect.appendChild(option);
-                }
+            db.getTasks().filter(t => t.status === 'completed').forEach(task => {
+                taskSelect.innerHTML += `<option value="${task.id}">${task.title}</option>`;
             });
         }
         
@@ -1209,53 +1187,38 @@
             const table = document.getElementById('attendance-table');
             table.innerHTML = '';
             
-            // For demo purposes, we'll show current user's attendance for the selected month
             const month = parseInt(document.getElementById('attendance-month').value);
             const year = parseInt(document.getElementById('attendance-year').value);
-            
-            // Generate dates for the selected month
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             
+            let recordsFound = false;
             for (let day = 1; day <= daysInMonth; day++) {
                 const date = new Date(year, month, day);
-                // Skip weekends for demo
-                if (date.getDay() === 0 || date.getDay() === 6) continue;
-                
                 const dateStr = date.toISOString().split('T')[0];
-                const attendance = db.getAttendance().find(a => 
-                    a.employeeId === currentUser.id && a.date === dateStr
-                ) || {
-                    clockIn: '09:00',
-                    clockOut: '17:00',
-                    status: ['present', 'wfh', 'absent'][Math.floor(Math.random() * 3)]
-                };
+                const record = db.getAttendance().find(a => a.employeeId === currentUser.id && a.date === dateStr);
                 
-                // Calculate total hours
-                const clockInParts = attendance.clockIn.split(':').map(Number);
-                const clockOutParts = attendance.clockOut.split(':').map(Number);
-                const start = new Date(2000, 0, 1, clockInParts[0], clockInParts[1]);
-                const end = new Date(2000, 0, 1, clockOutParts[0], clockOutParts[1]);
-                const diff = (end - start) / (1000 * 60 * 60); // hours
-                const totalHours = diff.toFixed(1);
-                
-                // Status badge
-                let statusBadge = '';
-                if (attendance.status === 'present') {
-                    statusBadge = '<span class="badge bg-success">Present</span>';
-                } else if (attendance.status === 'wfh') {
-                    statusBadge = '<span class="badge bg-warning">WFH</span>';
-                } else {
-                    statusBadge = '<span class="badge bg-danger">Absent</span>';
+                if(record){
+                    recordsFound = true;
+                    const clockInParts = record.clockIn.split(':').map(Number);
+                    const clockOutParts = record.clockOut.split(':').map(Number);
+                    const start = new Date(2000, 0, 1, clockInParts[0], clockInParts[1]);
+                    const end = new Date(2000, 0, 1, clockOutParts[0], clockOutParts[1]);
+                    const totalHours = ((end - start) / (1000 * 60 * 60)).toFixed(1);
+                    const statusBadge = `<span class="badge bg-success">${record.status}</span>`;
+                    
+                    table.innerHTML += `
+                        <tr>
+                            <td>${dateStr}</td>
+                            <td>${record.clockIn}</td>
+                            <td>${record.clockOut}</td>
+                            <td>${totalHours} hours</td>
+                            <td>${statusBadge}</td>
+                        </tr>`;
                 }
-                
-                table.innerHTML += `
-                    <tr>
-                        <td>${dateStr}</td>
-                        <td>${attendance.clockIn}</td>
-                        <td>${attendance.clockOut}</td>
-                        <td>${totalHours} hours</td>
-                        <td>${statusBadge}</td>
-                    </tr>`;
+            }
+
+            if(!recordsFound) {
+                table.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">No attendance records for this month.</td></tr>`;
             }
         }
         
@@ -1263,9 +1226,7 @@
             const table = document.getElementById('leave-requests-table');
             table.innerHTML = '';
             
-            const requests = db.getLeaves().filter(leave => 
-                leave.employeeId === currentUser.id
-            );
+            const requests = db.getLeaves().filter(leave => leave.employeeId === currentUser.id).reverse();
             
             if (requests.length === 0) {
                 table.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-muted">No leave or WFH requests found.</td></tr>`;
@@ -1273,18 +1234,12 @@
             }
             
             requests.forEach(req => {
-                let statusBadge = '';
-                if (req.status === 'approved') {
-                    statusBadge = '<span class="badge bg-success">Approved</span>';
-                } else if (req.status === 'rejected') {
-                    statusBadge = '<span class="badge bg-danger">Rejected</span>';
-                } else {
-                    statusBadge = '<span class="badge bg-warning">Pending</span>';
-                }
+                const statusClasses = { approved: 'success', rejected: 'danger', pending: 'warning'};
+                const statusBadge = `<span class="badge bg-${statusClasses[req.status]}">${req.status}</span>`;
                 
                 table.innerHTML += `
                     <tr>
-                        <td>${req.type === 'leave' ? 'Leave' : 'WFH'}</td>
+                        <td>${req.type.toUpperCase()}</td>
                         <td>${req.startDate} to ${req.endDate}</td>
                         <td>${req.reason}</td>
                         <td>${statusBadge}</td>
@@ -1293,17 +1248,17 @@
         }
         
         function loadPendingApprovals() {
+            const container = document.getElementById('pending-approvals-table').parentElement.parentElement;
+            if (!['admin', 'manager'].includes(currentUser.role)) {
+                container.classList.add('d-none');
+                return;
+            }
+            container.classList.remove('d-none');
+            
             const table = document.getElementById('pending-approvals-table');
             table.innerHTML = '';
             
-            if (!['admin', 'manager'].includes(currentUser.role)) {
-                table.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">Only admins and managers can see pending approvals.</td></tr>`;
-                return;
-            }
-            
-            const requests = db.getLeaves().filter(leave => 
-                leave.status === 'pending'
-            );
+            const requests = db.getLeaves().filter(leave => leave.status === 'pending');
             
             if (requests.length === 0) {
                 table.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">No pending approvals.</td></tr>`;
@@ -1316,7 +1271,7 @@
                 table.innerHTML += `
                     <tr>
                         <td>${employee.firstName} ${employee.lastName}</td>
-                        <td>${req.type === 'leave' ? 'Leave' : 'WFH'}</td>
+                        <td>${req.type.toUpperCase()}</td>
                         <td>${req.startDate} to ${req.endDate}</td>
                         <td>${req.reason}</td>
                         <td>
@@ -1326,130 +1281,29 @@
                     </tr>`;
             });
             
-            // Add event listeners to approval buttons
-            document.querySelectorAll('.approve-leave').forEach(btn => {
-                btn.addEventListener('click', () => updateLeaveStatus(btn.dataset.id, 'approved'));
-            });
-            
-            document.querySelectorAll('.reject-leave').forEach(btn => {
-                btn.addEventListener('click', () => updateLeaveStatus(btn.dataset.id, 'rejected'));
-            });
+            document.querySelectorAll('.approve-leave').forEach(btn => btn.addEventListener('click', () => updateLeaveStatus(btn.dataset.id, 'approved')));
+            document.querySelectorAll('.reject-leave').forEach(btn => btn.addEventListener('click', () => updateLeaveStatus(btn.dataset.id, 'rejected')));
         }
         
         function loadAnalyticsCharts() {
-            // Attendance Chart
-            const attendanceCtx = document.getElementById('attendance-chart').getContext('2d');
-            new Chart(attendanceCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-                    datasets: [
-                        {
-                            label: 'Present',
-                            data: [22, 24, 23, 25, 24],
-                            backgroundColor: '#10b981',
-                        },
-                        {
-                            label: 'WFH',
-                            data: [3, 2, 4, 3, 4],
-                            backgroundColor: '#f59e0b',
-                        },
-                        {
-                            label: 'Absent',
-                            data: [1, 0, 0, 0, 2],
-                            backgroundColor: '#ef4444',
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
-                }
+            ['attendance-chart', 'tasks-chart', 'leave-chart', 'performance-chart'].forEach(id => {
+                const chart = Chart.getChart(id);
+                if (chart) chart.destroy();
             });
+
+            new Chart(document.getElementById('attendance-chart'), { type: 'bar', data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], datasets: [{ label: 'Present', data: [22, 24, 23, 25, 24], backgroundColor: '#10b981' }, { label: 'WFH', data: [3, 2, 4, 3, 4], backgroundColor: '#f59e0b' }, { label: 'Absent', data: [1, 0, 0, 0, 2], backgroundColor: '#ef4444' }] }, options: { responsive: true, plugins: { legend: { position: 'top' } } } });
             
-            // Tasks Chart
-            const tasksCtx = document.getElementById('tasks-chart').getContext('2d');
             const tasks = db.getTasks();
-            const completed = tasks.filter(t => t.status === 'completed').length;
-            const assigned = tasks.filter(t => t.status === 'assigned').length;
-            const missed = tasks.filter(t => t.status === 'missed').length;
+            new Chart(document.getElementById('tasks-chart'), { type: 'doughnut', data: { labels: ['Completed', 'Assigned', 'Missed'], datasets: [{ data: [tasks.filter(t=>t.status==='completed').length, tasks.filter(t=>t.status==='assigned').length, tasks.filter(t=>t.status==='missed').length], backgroundColor: ['#10b981', '#3b82f6', '#ef4444'] }] }, options: { responsive: true, plugins: { legend: { position: 'top' } } } });
             
-            new Chart(tasksCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Completed', 'Assigned', 'Missed'],
-                    datasets: [{
-                        data: [completed, assigned, missed],
-                        backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
-                }
-            });
-            
-            // Leave Chart
-            const leaveCtx = document.getElementById('leave-chart').getContext('2d');
             const leaves = db.getLeaves();
-            const approved = leaves.filter(l => l.status === 'approved').length;
-            const pending = leaves.filter(l => l.status === 'pending').length;
-            const rejected = leaves.filter(l => l.status === 'rejected').length;
+            new Chart(document.getElementById('leave-chart'), { type: 'pie', data: { labels: ['Approved', 'Pending', 'Rejected'], datasets: [{ data: [leaves.filter(l=>l.status==='approved').length, leaves.filter(l=>l.status==='pending').length, leaves.filter(l=>l.status==='rejected').length], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'] }] }, options: { responsive: true, plugins: { legend: { position: 'top' } } } });
             
-            new Chart(leaveCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Approved', 'Pending', 'Rejected'],
-                    datasets: [{
-                        data: [approved, pending, rejected],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
-                }
-            });
-            
-            // Performance Chart
-            const performanceCtx = document.getElementById('performance-chart').getContext('2d');
-            new Chart(performanceCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Performance Score',
-                        data: [75, 82, 78, 85, 88, 90, 92],
-                        borderColor: '#4361ee',
-                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: {
-                            min: 50,
-                            max: 100
-                        }
-                    }
-                }
-            });
+            new Chart(document.getElementById('performance-chart'), { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'], datasets: [{ label: 'Performance Score', data: [75, 82, 78, 85, 88, 90, 92], borderColor: '#4361ee', backgroundColor: 'rgba(67, 97, 238, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 50, max: 100 } } } });
         }
         
         function loadProfileData() {
             if (!currentUser) return;
-            
             document.getElementById('profile-first-name').value = currentUser.firstName;
             document.getElementById('profile-last-name').value = currentUser.lastName;
             document.getElementById('profile-email').value = currentUser.email;
@@ -1460,26 +1314,19 @@
         }
         
         // =================================================================
-        // == TASK MANAGEMENT
+        // == HANDLERS & ACTIONS
         // =================================================================
         function openTaskModal() {
             DOMElements.taskForm.reset();
             document.getElementById('task-id').value = '';
             document.getElementById('taskModalTitle').textContent = 'Create New Task';
             
-            // Populate assignee dropdown
             const assigneeSelect = document.getElementById('task-assignee');
             assigneeSelect.innerHTML = '<option value="">Select Employee</option>';
-            db.getEmployees().forEach(emp => {
-                if (emp.status === 'active' && emp.id !== currentUser.id) {
-                    const option = document.createElement('option');
-                    option.value = emp.id;
-                    option.textContent = `${emp.firstName} ${emp.lastName}`;
-                    assigneeSelect.appendChild(option);
-                }
+            db.getEmployees().filter(e => e.status === 'active').forEach(emp => {
+                assigneeSelect.innerHTML += `<option value="${emp.id}">${emp.firstName} ${emp.lastName}</option>`;
             });
             
-            // Set default deadline to tomorrow
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('task-deadline').value = tomorrow.toISOString().split('T')[0];
@@ -1490,36 +1337,18 @@
         function handleSaveTask() {
             const id = document.getElementById('task-id').value;
             let tasks = db.getTasks();
-            
-            const taskData = {
-                title: document.getElementById('task-title').value,
-                description: document.getElementById('task-description').value,
-                assignee: parseInt(document.getElementById('task-assignee').value),
-                assignedBy: currentUser.id,
-                deadline: document.getElementById('task-deadline').value,
-                priority: document.getElementById('task-priority').value,
-                status: "assigned"
-            };
+            const taskData = { title: document.getElementById('task-title').value, description: document.getElementById('task-description').value, assignee: parseInt(document.getElementById('task-assignee').value), assignedBy: currentUser.id, deadline: document.getElementById('task-deadline').value, priority: document.getElementById('task-priority').value, status: "assigned" };
             
             if (id) {
-                // Update existing task
                 const index = tasks.findIndex(t => t.id == id);
-                if (index > -1) {
-                    tasks[index] = { ...tasks[index], ...taskData };
-                    showAlert('Task updated successfully.', 'success');
-                }
+                if (index > -1) tasks[index] = { ...tasks[index], ...taskData };
             } else {
-                // Create new task
-                const newTask = {
-                    id: Date.now(), // simple unique ID
-                    ...taskData
-                };
-                tasks.push(newTask);
-                showAlert('Task created successfully.', 'success');
+                tasks.push({ id: Date.now(), ...taskData });
             }
             
             db.saveTasks(tasks);
             taskModal.hide();
+            showAlert('Task saved successfully.', 'success');
             loadUserTasks();
             loadTeamTasks();
         }
@@ -1538,75 +1367,43 @@
             }
         }
         
-        // =================================================================
-        // == APPRECIATION MANAGEMENT
-        // =================================================================
         function handleSaveAppreciation(e) {
             e.preventDefault();
+            const appreciationData = { employeeId: parseInt(document.getElementById('appreciation-employee').value), taskId: parseInt(document.getElementById('appreciation-task').value), note: document.getElementById('appreciation-note').value, givenBy: currentUser.id, date: new Date().toISOString().split('T')[0], public: document.getElementById('appreciation-public').checked };
             
-            const appreciationData = {
-                employeeId: parseInt(document.getElementById('appreciation-employee').value),
-                taskId: parseInt(document.getElementById('appreciation-task').value),
-                note: document.getElementById('appreciation-note').value,
-                givenBy: currentUser.id,
-                date: new Date().toISOString().split('T')[0],
-                public: document.getElementById('appreciation-public').checked
-            };
-            
-            // Add appreciation to task
+            if(!appreciationData.employeeId || !appreciationData.taskId) {
+                showAlert('Please select an employee and a task.', 'warning');
+                return;
+            }
+
             const tasks = db.getTasks();
             const taskIndex = tasks.findIndex(t => t.id == appreciationData.taskId);
             if (taskIndex > -1) {
-                tasks[taskIndex].appreciation = {
-                    note: appreciationData.note,
-                    givenBy: appreciationData.givenBy,
-                    date: appreciationData.date,
-                    public: appreciationData.public
-                };
+                tasks[taskIndex].appreciation = { note: appreciationData.note, givenBy: appreciationData.givenBy, date: appreciationData.date, public: appreciationData.public };
                 db.saveTasks(tasks);
             }
             
-            // Save to appreciations list
             const appreciations = db.getAppreciations();
-            appreciations.push({
-                id: Date.now(),
-                ...appreciationData
-            });
+            appreciations.push({ id: Date.now(), ...appreciationData });
             db.saveAppreciations(appreciations);
             
             showAlert('Appreciation submitted successfully!', 'success');
             DOMElements.appreciationForm.reset();
             loadTeamAppreciations();
             loadRecentAppreciations();
-            loadUserTasks();
         }
         
-        // =================================================================
-        // == LEAVE & WFH MANAGEMENT
-        // =================================================================
         function handleSaveLeave(e) {
             e.preventDefault();
-            
-            const leaveData = {
-                employeeId: currentUser.id,
-                type: document.getElementById('leave-type').value,
-                startDate: document.getElementById('leave-start').value,
-                endDate: document.getElementById('leave-end').value,
-                reason: document.getElementById('leave-reason').value,
-                status: "pending"
-            };
+            const leaveData = { employeeId: currentUser.id, type: document.getElementById('leave-type').value, startDate: document.getElementById('leave-start').value, endDate: document.getElementById('leave-end').value, reason: document.getElementById('leave-reason').value, status: "pending" };
             
             const leaves = db.getLeaves();
-            leaves.push({
-                id: Date.now(),
-                ...leaveData
-            });
+            leaves.push({ id: Date.now(), ...leaveData });
             db.saveLeaves(leaves);
             
             showAlert('Request submitted successfully!', 'success');
             DOMElements.leaveForm.reset();
             loadLeaveRequests();
-            loadPendingApprovals();
         }
         
         function updateLeaveStatus(leaveId, status) {
@@ -1616,29 +1413,15 @@
             if (leaveIndex > -1) {
                 leaves[leaveIndex].status = status;
                 db.saveLeaves(leaves);
-                showAlert(`Request ${status}!`, 'success');
-                loadLeaveRequests();
+                showAlert(`Request has been ${status}!`, 'success');
                 loadPendingApprovals();
             }
         }
         
-        // =================================================================
-        // == PROFILE & PASSWORD
-        // =================================================================
         function handleSaveProfile(e) {
             e.preventDefault();
+            const profileData = { firstName: document.getElementById('profile-first-name').value, lastName: document.getElementById('profile-last-name').value, email: document.getElementById('profile-email').value, phone: document.getElementById('profile-phone').value, department: document.getElementById('profile-department').value, dob: document.getElementById('profile-dob').value, address: document.getElementById('profile-address').value };
             
-            const profileData = {
-                firstName: document.getElementById('profile-first-name').value,
-                lastName: document.getElementById('profile-last-name').value,
-                email: document.getElementById('profile-email').value,
-                phone: document.getElementById('profile-phone').value,
-                department: document.getElementById('profile-department').value,
-                dob: document.getElementById('profile-dob').value,
-                address: document.getElementById('profile-address').value
-            };
-            
-            // Update current user
             const employees = db.getEmployees();
             const employeeIndex = employees.findIndex(e => e.id == currentUser.id);
             
@@ -1646,7 +1429,6 @@
                 employees[employeeIndex] = { ...employees[employeeIndex], ...profileData };
                 db.saveEmployees(employees);
                 
-                // Update session
                 currentUser = employees[employeeIndex];
                 db.setCurrentUser(currentUser);
                 updateUIForUserRole();
@@ -1657,27 +1439,14 @@
         
         function handleChangePassword(e) {
             e.preventDefault();
-            
             const currentPassword = document.getElementById('current-password').value;
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
-            if (currentPassword !== currentUser.password) {
-                showAlert('Current password is incorrect.', 'danger');
-                return;
-            }
+            if (currentPassword !== currentUser.password) { showAlert('Current password is incorrect.', 'danger'); return; }
+            if (newPassword !== confirmPassword) { showAlert('New passwords do not match.', 'danger'); return; }
+            if (calculatePasswordStrength(newPassword) < 3) { showAlert('New password is too weak.', 'danger'); return; }
             
-            if (newPassword !== confirmPassword) {
-                showAlert('New passwords do not match.', 'danger');
-                return;
-            }
-            
-            if (newPassword.length < 6) {
-                showAlert('Password must be at least 6 characters long.', 'danger');
-                return;
-            }
-            
-            // Update password
             const employees = db.getEmployees();
             const employeeIndex = employees.findIndex(e => e.id == currentUser.id);
             
@@ -1685,7 +1454,6 @@
                 employees[employeeIndex].password = newPassword;
                 db.saveEmployees(employees);
                 
-                // Update session
                 currentUser.password = newPassword;
                 db.setCurrentUser(currentUser);
                 
@@ -1694,50 +1462,36 @@
             }
         }
         
-        // =================================================================
-        // == ATTENDANCE CLOCK
-        // =================================================================
         function toggleClock() {
             if (!clockedIn) {
-                // Clock in
                 clockedIn = true;
                 clockInTime = new Date();
                 DOMElements.clockBtn.textContent = "Clock Out";
                 DOMElements.clockBtn.classList.add("clocked-in");
+                DOMElements.clockBtn.classList.remove("clocked-out");
                 showAlert("Clocked in successfully!", "success");
             } else {
-                // Clock out
                 clockedIn = false;
                 const clockOutTime = new Date();
                 const hoursWorked = ((clockOutTime - clockInTime) / (1000 * 60 * 60)).toFixed(1);
                 
-                // Save attendance record
                 const attendance = db.getAttendance();
-                attendance.push({
-                    employeeId: currentUser.id,
-                    date: new Date().toISOString().split('T')[0],
-                    clockIn: clockInTime.toTimeString().substring(0, 5),
-                    clockOut: clockOutTime.toTimeString().substring(0, 5),
-                    status: "present"
-                });
+                attendance.push({ employeeId: currentUser.id, date: new Date().toISOString().split('T')[0], clockIn: clockInTime.toTimeString().substring(0, 5), clockOut: clockOutTime.toTimeString().substring(0, 5), status: "present" });
                 db.saveAttendance(attendance);
                 
                 DOMElements.clockBtn.textContent = "Clock In";
                 DOMElements.clockBtn.classList.remove("clocked-in");
+                DOMElements.clockBtn.classList.add("clocked-out");
                 showAlert(`Clocked out. You worked ${hoursWorked} hours today.`, "success");
             }
         }
         
-        // =================================================================
-        // == UTILITY FUNCTIONS
-        // =================================================================
         function showAlert(message, type = 'info') {
             const alertContainer = document.getElementById('alert-container');
             const alert = document.createElement('div');
             alert.className = `alert alert-${type} alert-dismissible fade show`;
             alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
             alertContainer.appendChild(alert);
-            new bootstrap.Alert(alert);
             setTimeout(() => {
                 const alertInstance = bootstrap.Alert.getOrCreateInstance(alert);
                 if (alertInstance) alertInstance.close();
@@ -1750,6 +1504,7 @@
             document.getElementById('employeeModalTitle').textContent = 'Add New Employee';
             document.getElementById('status-field-group').classList.add('d-none');
             document.getElementById('password-field-group').classList.remove('d-none');
+            document.getElementById('employee-password').required = true;
             employeeModal.show();
         }
         
@@ -1757,30 +1512,16 @@
             const id = document.getElementById('employee-id').value;
             let employees = db.getEmployees();
             
-            const employeeData = {
-                firstName: document.getElementById('employee-first-name').value,
-                lastName: document.getElementById('employee-last-name').value,
-                email: document.getElementById('employee-email').value,
-                password: document.getElementById('employee-password').value,
-                department: document.getElementById('employee-department').value,
-                role: document.getElementById('employee-role').value,
-                status: document.getElementById('employee-status').value || 'active',
-                joinDate: new Date().toISOString()
-            };
+            const employeeData = { firstName: document.getElementById('employee-first-name').value, lastName: document.getElementById('employee-last-name').value, email: document.getElementById('employee-email').value, department: document.getElementById('employee-department').value, role: document.getElementById('employee-role').value };
             
             if (id) {
-                // Update existing employee
                 const index = employees.findIndex(e => e.id == id);
                 if (index > -1) {
-                    employees[index] = { ...employees[index], ...employeeData };
+                    employees[index] = { ...employees[index], ...employeeData, status: document.getElementById('employee-status').value };
                     showAlert('Employee updated successfully.', 'success');
                 }
             } else {
-                // Create new employee
-                const newEmployee = {
-                    id: Date.now(), // simple unique ID
-                    ...employeeData
-                };
+                const newEmployee = { id: Date.now(), ...employeeData, password: document.getElementById('employee-password').value, status: 'active', joinDate: new Date().toISOString() };
                 employees.push(newEmployee);
                 showAlert('Employee created successfully.', 'success');
             }
@@ -1793,30 +1534,13 @@
         function loadEmployees() {
             const table = document.getElementById('employees-table');
             table.innerHTML = '';
-            
             const employees = db.getEmployees();
             
-            if (employees.length === 0) {
-                table.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">No employees found.</td></tr>`;
-                return;
-            }
+            if (employees.length === 0) { table.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">No employees found.</td></tr>`; return; }
             
             employees.forEach(emp => {
-                let statusBadge = '';
-                if (emp.status === 'active') {
-                    statusBadge = '<span class="badge bg-success">Active</span>';
-                } else {
-                    statusBadge = '<span class="badge bg-danger">Inactive</span>';
-                }
-                
-                let roleBadge = '';
-                if (emp.role === 'admin') {
-                    roleBadge = '<span class="badge role-admin">Admin</span>';
-                } else if (emp.role === 'manager') {
-                    roleBadge = '<span class="badge role-manager">Manager</span>';
-                } else {
-                    roleBadge = '<span class="badge role-employee">Employee</span>';
-                }
+                const statusBadge = `<span class="badge bg-${emp.status === 'active' ? 'success' : 'danger'}">${emp.status}</span>`;
+                const roleBadge = `<span class="badge role-${emp.role}">${emp.role}</span>`;
                 
                 table.innerHTML += `
                     <tr>
@@ -1826,15 +1550,12 @@
                         <td>${roleBadge}</td>
                         <td>${statusBadge}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary edit-employee" data-id="${emp.id}">Edit</button>
+                            <button class="btn btn-sm btn-outline-primary edit-employee" data-id="${emp.id}"><i class="fas fa-edit"></i></button>
                         </td>
                     </tr>`;
             });
             
-            // Add event listeners to edit buttons
-            document.querySelectorAll('.edit-employee').forEach(btn => {
-                btn.addEventListener('click', () => openEmployeeModalForEdit(btn.dataset.id));
-            });
+            document.querySelectorAll('.edit-employee').forEach(btn => btn.addEventListener('click', () => openEmployeeModalForEdit(btn.dataset.id)));
         }
         
         function openEmployeeModalForEdit(employeeId) {
@@ -1848,11 +1569,11 @@
             document.getElementById('employee-department').value = employee.department;
             document.getElementById('employee-role').value = employee.role;
             document.getElementById('employee-status').value = employee.status;
-            document.getElementById('employee-password').value = employee.password;
             
             document.getElementById('employeeModalTitle').textContent = 'Edit Employee';
             document.getElementById('status-field-group').classList.remove('d-none');
-            document.getElementById('password-field-group').classList.add('d-none');
+            document.getElementById('password-field-group').classList.add('d-none'); // Don't show password on edit
+            document.getElementById('employee-password').required = false;
             
             employeeModal.show();
         }
